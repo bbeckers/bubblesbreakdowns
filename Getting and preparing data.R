@@ -2,171 +2,172 @@
 # Starting values (do not comment) ---------------------------------------------------------
 #  ------------------------------------------------------------------------
 
-wd='C:/Users/Dirk/Documents/GitHub/bubblesbreakdowns'
+
 wd='H:/Fred'
+wd='C:/Users/Dirk/Documents/GitHub/bubblesbreakdowns'
 setwd(wd)
 dir.rt=paste(wd,'/data',sep='')
-
-#  ------------------------------------------------------------------------
-# Downloading and storing Data ---------------------------------------------------------
-#  ------------------------------------------------------------------------
-
-library("XLConnect")
-library("xlsx")
-
-dir.create(dir.rt)
-
-
-# searching the index page of data base -----------------------------------
-
-startaddress='http://www.philadelphiafed.org/research-and-data/real-time-center/real-time-data/data-files/'
-fileaddress=paste(startaddress,'files/',sep='')
-starthtml=readLines(startaddress)
-# write.csv(starthtml,'starthtml.txt') # for inspection of starthtml only 
-
-variable_index=regexec(paste('\\(','([A-Z]+)','\\)',sep=''),starthtml)
-variable_vector=regmatches(starthtml,variable_index)#[[1]][2]
-
-for (i in length(variable_vector):1){
-        if (length(variable_vector[[i]])==0){variable_vector[[i]]=NULL}
-}
-rm(i)
-variables=sapply(variable_vector,function(x) x[[2]])
-rm(variable_index,variable_vector,starthtml)
-variables=unique(variables)
-nvar=length(variables)
-
-
-# downloads all files -----------------------------------------------------
-
-for (j in 1:nvar){
-        dir.var=paste(dir.rt,'/',variables[j],sep='')
-        dir.create(dir.var)
-        
-        varaddress=paste(startaddress,variables[j],sep='')
-        varhtml=readLines(varaddress)
-        # write.csv(varhtml,'varthtml.txt')
-        
-        zip_index=regexec(paste('/','(.*)','.zip',sep=''),varhtml)
-        zip_index=regexec(paste('([A-Za-z0-9\\_]{1,}\\.zip[x]?)',sep=''),varhtml)
-        
-        zip_vector=regmatches(varhtml,zip_index)#[[1]][2]
-        nonzeros=sapply(zip_vector, function(x)length(x)!=0)
-        zip=zip_vector[nonzeros]
-        zip=sapply(zip,function(x) x[[1]])
-        
-        if (length(zip)!=0){
-                download.file(paste(fileaddress,zip,sep='')
-                              , paste(dir.var,'/',zip,sep='')
-                              ,mode='wb')   
-                unzip(paste(dir.var,'/',zip,sep=''),exdir=dir.var)
-        }else{
-                xls_index=regexec(paste('/','(.*)','.xl',sep=''),varhtml)
-                xls_index=regexec(paste('([A-Za-z0-9\\_]{1,}\\.xls[x]?)',sep=''),varhtml)
-                
-                xls_vector=regmatches(varhtml,xls_index)#[[1]][2]
-                nuller=sapply(xls_vector, function(x)length(x)==0)
-                xls=xls_vector[nuller!=T]
-                xls=sapply(xls,function(x) x[[1]])
-                #         grep(,xls)
-                # write.csv(xls_vector,'varhtml.txt')
-                for (i in 1:length(xls)){
-                        download.file(paste(fileaddress,xls[i],sep='')
-                                      , paste(dir.var,'/',xls[i],sep='')
-                                      ,mode='wb')                    
-                }    
-        }
-}
-
-# Failed download? --------------------------------------------------------
-
-variables_downloaded=list.files(paste(dir.rt))
-not_downl=match(variables,variables_downloaded)
-variables[which(is.na(not_downl)==T)]
-
-# Reading files, binding files of each variable together ------------------
-no_mth_variables=character(0)
-for (j in 1:nvar){
-        #         if (variables[j]=="EMPLOY"){next}
-        dir.var=paste(dir.rt,'/',variables[j],sep='')
-        files=list.files(dir.var)
-        # restricting the process on monthly variables        
-        mfiles=files[grep('MvMd',files)]
-        # taking care of zip files
-        if (length(grep('zip',mfiles))!=0){
-                mfiles=mfiles[-grep('zip',mfiles)]
-        }
-        if (length(mfiles)==0){
-                no_mth_variables=c(no_mth_variables,variables[j])
-                warning(paste('no monthly data available for ',variables[j],sep=''))
-                next
-        }
-        cleanmfiles=gsub('[0-9]','',mfiles)
-        varname=unique(cleanmfiles)
-        # taking care of zip files
-        if (length(grep('zip',varname))!=0){
-                varname=varname[-grep('zip',varname)]
-        }
-        if (length(mfiles)==1){
-                #                 only one file
-                df=read.xlsx2(paste(dir.var,'/',varname,sep=''),sheetIndex=1,row.names=1)
-                eval(parse(text=paste(variables[j],'=df',sep='')))
-        }else{
-                #                         more than one file
-                
-                if(length(varname)>1){warning('not only one variable')}
-                
-                varname=gsub('\\.xls','',varname)
-                numfiles=gsub(varname,'',mfiles)
-                numfiles=gsub('\\.xls','',numfiles)
-                numfiles=max(as.numeric(numfiles))
-                
-                for (i in 1:numfiles){
-                        df_add=read.xlsx2(paste(dir.var,'/',varname,i,'.xls',sep=''),sheetIndex=1,row.names=1)
-                        if (i==1){
-                                df=df_add
-                        }else{
-                                if (nrow(df)!=nrow(df_add)){
-                                        df_dates=row.names(df)
-                                        df_add_dates=row.names(df_add)
-                                        matchdates=match(df_add_dates,df_dates)
-                                        add_dates=df_add_dates[which(is.na(matchdates)==T)]
-                                        add_lines=df[1:length(add_dates),]
-                                        add_lines[1:length(add_dates),]=NA
-                                        row.names(add_lines)=add_dates
-                                        df=rbind(df,add_lines)
-                                }
-                                df=cbind(df,df_add)
-                        }
-                        if (i==numfiles){
-                                eval(parse(text=paste(variables[j],'=df',sep='')))
-                        }
-                }
-        }
-}
-# Needed repairs: EMPLOY 4 and CUM 2, zipped versions were all right.
-
-
-# Writes the compounded files to disk -------------------------------------
-list.compounded.variables=ls()
-list.compounded.variables=list.compounded.variables[grep('[A-Z]',list.compounded.variables)]
-
-list.compounded.variables=list.compounded.variables[-c(grep('wd',list.compounded.variables),grep('list.compounded.variables',list.compounded.variables))]
-for (variable in list.compounded.variables){
-        cat(paste('write.csv(',variable,',\'',wd,'/',variable,'.csv\')',sep=''),file='out')
-        #         test=paste(wd,'/',variable,'.csv',sep='')
-        eval(parse(file='out'))
-}
-
-save.image(paste(wd,"/data/realtime.RData",sep=''))
-
+# 
+# #  ------------------------------------------------------------------------
+# # Downloading and storing Data ---------------------------------------------------------
+# #  ------------------------------------------------------------------------
+# 
+# library("XLConnect")
+# library("xlsx")
+# 
+# dir.create(dir.rt)
+# 
+# 
+# # searching the index page of data base -----------------------------------
+# 
+# startaddress='http://www.philadelphiafed.org/research-and-data/real-time-center/real-time-data/data-files/'
+# fileaddress=paste(startaddress,'files/',sep='')
+# starthtml=readLines(startaddress)
+# # write.csv(starthtml,'starthtml.txt') # for inspection of starthtml only 
+# 
+# variable_index=regexec(paste('\\(','([A-Z]+)','\\)',sep=''),starthtml)
+# variable_vector=regmatches(starthtml,variable_index)#[[1]][2]
+# 
+# for (i in length(variable_vector):1){
+#         if (length(variable_vector[[i]])==0){variable_vector[[i]]=NULL}
+# }
+# rm(i)
+# variables=sapply(variable_vector,function(x) x[[2]])
+# rm(variable_index,variable_vector,starthtml)
+# variables=unique(variables)
+# nvar=length(variables)
+# 
+# 
+# # downloads all files -----------------------------------------------------
+# 
+# for (j in 1:nvar){
+#         dir.var=paste(dir.rt,'/',variables[j],sep='')
+#         dir.create(dir.var)
+#         
+#         varaddress=paste(startaddress,variables[j],sep='')
+#         varhtml=readLines(varaddress)
+#         # write.csv(varhtml,'varthtml.txt')
+#         
+#         zip_index=regexec(paste('/','(.*)','.zip',sep=''),varhtml)
+#         zip_index=regexec(paste('([A-Za-z0-9\\_]{1,}\\.zip[x]?)',sep=''),varhtml)
+#         
+#         zip_vector=regmatches(varhtml,zip_index)#[[1]][2]
+#         nonzeros=sapply(zip_vector, function(x)length(x)!=0)
+#         zip=zip_vector[nonzeros]
+#         zip=sapply(zip,function(x) x[[1]])
+#         
+#         if (length(zip)!=0){
+#                 download.file(paste(fileaddress,zip,sep='')
+#                               , paste(dir.var,'/',zip,sep='')
+#                               ,mode='wb')   
+#                 unzip(paste(dir.var,'/',zip,sep=''),exdir=dir.var)
+#         }else{
+#                 xls_index=regexec(paste('/','(.*)','.xl',sep=''),varhtml)
+#                 xls_index=regexec(paste('([A-Za-z0-9\\_]{1,}\\.xls[x]?)',sep=''),varhtml)
+#                 
+#                 xls_vector=regmatches(varhtml,xls_index)#[[1]][2]
+#                 nuller=sapply(xls_vector, function(x)length(x)==0)
+#                 xls=xls_vector[nuller!=T]
+#                 xls=sapply(xls,function(x) x[[1]])
+#                 #         grep(,xls)
+#                 # write.csv(xls_vector,'varhtml.txt')
+#                 for (i in 1:length(xls)){
+#                         download.file(paste(fileaddress,xls[i],sep='')
+#                                       , paste(dir.var,'/',xls[i],sep='')
+#                                       ,mode='wb')                    
+#                 }    
+#         }
+# }
+# 
+# # Failed download? --------------------------------------------------------
+# 
+# variables_downloaded=list.files(paste(dir.rt))
+# not_downl=match(variables,variables_downloaded)
+# variables[which(is.na(not_downl)==T)]
+# 
+# # Reading files, binding files of each variable together ------------------
+# no_mth_variables=character(0)
+# for (j in 1:nvar){
+#         #         if (variables[j]=="EMPLOY"){next}
+#         dir.var=paste(dir.rt,'/',variables[j],sep='')
+#         files=list.files(dir.var)
+#         # restricting the process on monthly variables        
+#         mfiles=files[grep('MvMd',files)]
+#         # taking care of zip files
+#         if (length(grep('zip',mfiles))!=0){
+#                 mfiles=mfiles[-grep('zip',mfiles)]
+#         }
+#         if (length(mfiles)==0){
+#                 no_mth_variables=c(no_mth_variables,variables[j])
+#                 warning(paste('no monthly data available for ',variables[j],sep=''))
+#                 next
+#         }
+#         cleanmfiles=gsub('[0-9]','',mfiles)
+#         varname=unique(cleanmfiles)
+#         # taking care of zip files
+#         if (length(grep('zip',varname))!=0){
+#                 varname=varname[-grep('zip',varname)]
+#         }
+#         if (length(mfiles)==1){
+#                 #                 only one file
+#                 df=read.xlsx2(paste(dir.var,'/',varname,sep=''),sheetIndex=1,row.names=1)
+#                 eval(parse(text=paste(variables[j],'=df',sep='')))
+#         }else{
+#                 #                         more than one file
+#                 
+#                 if(length(varname)>1){warning('not only one variable')}
+#                 
+#                 varname=gsub('\\.xls','',varname)
+#                 numfiles=gsub(varname,'',mfiles)
+#                 numfiles=gsub('\\.xls','',numfiles)
+#                 numfiles=max(as.numeric(numfiles))
+#                 
+#                 for (i in 1:numfiles){
+#                         df_add=read.xlsx2(paste(dir.var,'/',varname,i,'.xls',sep=''),sheetIndex=1,row.names=1)
+#                         if (i==1){
+#                                 df=df_add
+#                         }else{
+#                                 if (nrow(df)!=nrow(df_add)){
+#                                         df_dates=row.names(df)
+#                                         df_add_dates=row.names(df_add)
+#                                         matchdates=match(df_add_dates,df_dates)
+#                                         add_dates=df_add_dates[which(is.na(matchdates)==T)]
+#                                         add_lines=df[1:length(add_dates),]
+#                                         add_lines[1:length(add_dates),]=NA
+#                                         row.names(add_lines)=add_dates
+#                                         df=rbind(df,add_lines)
+#                                 }
+#                                 df=cbind(df,df_add)
+#                         }
+#                         if (i==numfiles){
+#                                 eval(parse(text=paste(variables[j],'=df',sep='')))
+#                         }
+#                 }
+#         }
+# }
+# # Needed repairs: EMPLOY 4 and CUM 2, zipped versions were all right.
+# 
+# 
+# # Writes the compounded files to disk -------------------------------------
+# list.compounded.variables=ls()
+# list.compounded.variables=list.compounded.variables[grep('[A-Z]',list.compounded.variables)]
+# 
+# list.compounded.variables=list.compounded.variables[-c(grep('wd',list.compounded.variables),grep('list.compounded.variables',list.compounded.variables))]
+# for (variable in list.compounded.variables){
+#         cat(paste('write.csv(',variable,',\'',wd,'/',variable,'.csv\')',sep=''),file='out')
+#         #         test=paste(wd,'/',variable,'.csv',sep='')
+#         eval(parse(file='out'))
+# }
+# 
+# save.image(paste(wd,"/data/realtime.RData",sep=''))
+# 
 
 
 #  ------------------------------------------------------------------------
 # Processing Data ---------------------------------------------------------
 #  ------------------------------------------------------------------------
 
-load(paste(wd,"/realtime.RData",sep=''))
+load(paste(wd,"/data/realtime.RData",sep=''))
 # checking availability of each variable ----------------------------------
 # overview is a dataframe helping here
 variables=ls()
@@ -308,20 +309,5 @@ for (vintage in vintages){
         sets[[vintage]]=set.maker(vintage)
 }
 
-# pushing all values to forecast origin -----------------------------------
-# (eliminating NAs)
-# Here for one test-set
-
-set=sets[[vintage]]
-push.up=function(variable,set){
-        aux=set[,variable]
-        naux=length(aux)
-        values=aux[is.na(aux)==F]
-        nvalues=length(values)
-        aux2=rep(NA,naux)
-        aux2[(naux-nvalues+1):naux]=values
-        return(aux2)
-}
-set.pushed=sapply(variables,push.up,set)
-row.names(set.pushed)=row.names(set)
 write.csv(overview,'overview.csv')
+# save(sets, file = "data/sets.RData")

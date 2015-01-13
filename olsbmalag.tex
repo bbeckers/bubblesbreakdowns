@@ -1,0 +1,169 @@
+\documentclass[]{article}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage{amssymb,amsmath}
+\usepackage{ifxetex,ifluatex}
+\usepackage{fixltx2e} % provides \textsubscript
+% use upquote if available, for straight quotes in verbatim environments
+\IfFileExists{upquote.sty}{\usepackage{upquote}}{}
+\ifnum 0\ifxetex 1\fi\ifluatex 1\fi=0 % if pdftex
+  \usepackage[utf8]{inputenc}
+\else % if luatex or xelatex
+  \ifxetex
+    \usepackage{mathspec}
+    \usepackage{xltxtra,xunicode}
+  \else
+    \usepackage{fontspec}
+  \fi
+  \defaultfontfeatures{Mapping=tex-text,Scale=MatchLowercase}
+  \newcommand{\euro}{€}
+\fi
+% use microtype if available
+\IfFileExists{microtype.sty}{\usepackage{microtype}}{}
+\usepackage[margin=1in]{geometry}
+\usepackage{color}
+\usepackage{fancyvrb}
+\newcommand{\VerbBar}{|}
+\newcommand{\VERB}{\Verb[commandchars=\\\{\}]}
+\DefineVerbatimEnvironment{Highlighting}{Verbatim}{commandchars=\\\{\}}
+% Add ',fontsize=\small' for more characters per line
+\usepackage{framed}
+\definecolor{shadecolor}{RGB}{248,248,248}
+\newenvironment{Shaded}{\begin{snugshade}}{\end{snugshade}}
+\newcommand{\KeywordTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{\textbf{{#1}}}}
+\newcommand{\DataTypeTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{{#1}}}
+\newcommand{\DecValTok}[1]{\textcolor[rgb]{0.00,0.00,0.81}{{#1}}}
+\newcommand{\BaseNTok}[1]{\textcolor[rgb]{0.00,0.00,0.81}{{#1}}}
+\newcommand{\FloatTok}[1]{\textcolor[rgb]{0.00,0.00,0.81}{{#1}}}
+\newcommand{\CharTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{{#1}}}
+\newcommand{\StringTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{{#1}}}
+\newcommand{\CommentTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textit{{#1}}}}
+\newcommand{\OtherTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{{#1}}}
+\newcommand{\AlertTok}[1]{\textcolor[rgb]{0.94,0.16,0.16}{{#1}}}
+\newcommand{\FunctionTok}[1]{\textcolor[rgb]{0.00,0.00,0.00}{{#1}}}
+\newcommand{\RegionMarkerTok}[1]{{#1}}
+\newcommand{\ErrorTok}[1]{\textbf{{#1}}}
+\newcommand{\NormalTok}[1]{{#1}}
+\ifxetex
+  \usepackage[setpagesize=false, % page size defined by xetex
+              unicode=false, % unicode breaks when used with xetex
+              xetex]{hyperref}
+\else
+  \usepackage[unicode=true]{hyperref}
+\fi
+\hypersetup{breaklinks=true,
+            bookmarks=true,
+            pdfauthor={},
+            pdftitle={OLS forecast with BMA lag length selection},
+            colorlinks=true,
+            citecolor=blue,
+            urlcolor=blue,
+            linkcolor=magenta,
+            pdfborder={0 0 0}}
+\urlstyle{same}  % don't use monospace font for urls
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{6pt plus 2pt minus 1pt}
+\setlength{\emergencystretch}{3em}  % prevent overfull lines
+\setcounter{secnumdepth}{0}
+
+\title{OLS forecast with BMA lag length selection}
+\author{}
+\date{}
+
+\begin{document}
+
+\begin{center}
+\huge OLS forecast with BMA lag length selection \\[0.2cm]
+\normalsize
+\end{center}
+
+
+In order to compute a forecast the optimal lag length connecting the
+past and the present has to be estimated. Frequently, the lag length is
+selected starting with a lag of 1 up to a optimal lag length. Optimality
+is decided upon using one of the different information criterion in
+order to weigh the cost of estimation accuracy loss against potential
+gains of using more information in form of more lags. However, thereby
+all intermediate lags between 1 and the optimal length are automatically
+included regardless of there benefit. This reduces the computational
+effort considerably: If all possible combinations of lags were estimated
+in order to find the best fit, this would be very time intensive. E.g.,
+instead of estimating a model with 1 lag, 2 lags or 3 lags and selecting
+the model with the smallest BIC, addittionally models with lag 1 and 3,
+lag 2 and 3, lag 3, and lag 2, or simply regressing on a constant would
+have to be estimated, as well.
+
+However, using the Bayesian model averaging (BMA) package that
+implements a grid search is a nice alternative. Here all possible
+combinations of the independent variables (in the forecast context this
+would be lags of the endogenous and lagged values of other explanatory
+variables) are searched for the best combination. The best model is then
+the one that has the highest posterior likelihood. Assuming there is no
+prior knowledge about the usefullness of any specific lag, an
+uninformative prior is selected.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{lag.exact<-function(x.df,lag.length)\{}
+        \CommentTok{# Returns a dataframe of the lags of x.df with lag.length}
+        \NormalTok{x.n=}\KeywordTok{ncol}\NormalTok{(x.df)}
+        \NormalTok{x.obs=}\KeywordTok{nrow}\NormalTok{(x.df)}
+        \NormalTok{x.df.lag=}\KeywordTok{data.frame}\NormalTok{(}\KeywordTok{matrix}\NormalTok{(}\OtherTok{NA}\NormalTok{,}\KeywordTok{nrow}\NormalTok{(x.df),x.n))}
+        \NormalTok{x.names=}\KeywordTok{colnames}\NormalTok{(x.df)}
+        \NormalTok{x.df.lag[(lag.length}\DecValTok{+1}\NormalTok{):}\KeywordTok{nrow}\NormalTok{(x.df),]=x.df[}\DecValTok{1}\NormalTok{:(}\KeywordTok{nrow}\NormalTok{(x.df)-lag.length),]}
+        \KeywordTok{rownames}\NormalTok{(x.df.lag)=}\KeywordTok{rownames}\NormalTok{(x.df)}
+        \KeywordTok{colnames}\NormalTok{(x.df.lag)=}\KeywordTok{paste}\NormalTok{(}\KeywordTok{colnames}\NormalTok{(x.df),}\StringTok{'L'}\NormalTok{,lag.length,}\DataTypeTok{sep=}\StringTok{''}\NormalTok{)}
+        \KeywordTok{return}\NormalTok{(x.df.lag)}
+        \NormalTok{\}}
+
+\CommentTok{# saving function to disk}
+\KeywordTok{dump}\NormalTok{(}\StringTok{'lag.exact'}\NormalTok{,}\KeywordTok{paste}\NormalTok{(DirCode,}\StringTok{'/lag.exact.R'}\NormalTok{,}\DataTypeTok{sep=}\StringTok{''}\NormalTok{),}\DataTypeTok{control=}\StringTok{'all'}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+Next, a function returning a dataframe fo the lags starting with lag
+length = horizon and ending with lag length = horizon+max.lag is
+computed and saved to file.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{lag.hormax=function(df,horizon,maxlag)\{}
+        \CommentTok{# returns a lag matrix of the lags of dataframe df from lag=horizon to lag=maxlag.}
+        \NormalTok{x.n=}\KeywordTok{ncol}\NormalTok{(df)}
+        \NormalTok{x.obs=}\KeywordTok{nrow}\NormalTok{(df)}
+        \NormalTok{for (lag in horizon:(horizon+maxlag}\DecValTok{-1}\NormalTok{))\{}
+                \NormalTok{if (lag==horizon)\{df.hormax=}\KeywordTok{lag.exact}\NormalTok{(df,horizon)\}else\{}
+                        \NormalTok{df.hormax=}\KeywordTok{cbind}\NormalTok{(df.hormax,}\KeywordTok{lag.exact}\NormalTok{(df,lag))}
+                        \NormalTok{\}}
+                \NormalTok{\}}
+        \KeywordTok{return}\NormalTok{(df.hormax)}
+        \NormalTok{\}}
+\KeywordTok{dump}\NormalTok{(}\StringTok{'lag.hormax'}\NormalTok{,}\KeywordTok{paste}\NormalTok{(DirCode,}\StringTok{'/lag.hormax.R'}\NormalTok{,}\DataTypeTok{sep=}\StringTok{''}\NormalTok{),}\DataTypeTok{control=}\StringTok{'all'}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+Now, a function to select the most recent values to be plugged in the
+estimated model is created and stored to disk.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{plugin.values<-function(df,max.lag)\{}
+        \CommentTok{#  creates the most recent values to be plugged in }
+        \CommentTok{# the regression results of lag=1 to max.lag}
+        \NormalTok{x.obs=}\KeywordTok{nrow}\NormalTok{(df)}
+        \NormalTok{df.lag=}\KeywordTok{lag.hormax}\NormalTok{(df,}\DecValTok{1}\NormalTok{,max.lag}\DecValTok{-1}\NormalTok{)}
+        \NormalTok{plugin.values=}\KeywordTok{cbind}\NormalTok{(df[x.obs,],df.lag[x.obs,])}
+        \KeywordTok{return}\NormalTok{(plugin.values)}
+        \NormalTok{\}}
+\CommentTok{# saving function to disk}
+\KeywordTok{dump}\NormalTok{(}\StringTok{'plugin.values'}\NormalTok{,}\KeywordTok{paste}\NormalTok{(DirCode,}\StringTok{'/plugin.values.R'}\NormalTok{,}\DataTypeTok{sep=}\StringTok{''}\NormalTok{),}\DataTypeTok{evaluate=}\NormalTok{F)}
+\end{Highlighting}
+\end{Shaded}
+
+Finally, the BMA package and the three functions just created are
+employed to regress y.df on x.df and its lags. The minimum lag is
+lag=horizon and the maximum lag is lag=horizon+max.lag. Then the most
+recent values are plugged into the model with the highest posterior
+probability to compute the h=horizon forecast.
+
+\end{document}
