@@ -13,16 +13,27 @@ source(paste(DirCode,'/lag.exact.R',sep=''))
 source(paste(DirCode,'/diff.R',sep=''))
 source(paste(DirCode,'/chg.R',sep=''))
 
+# setting some values
+horizon=13 # inflation is published with on month lag.
+target='PCPIX' # core inflation
+max.lag=12 # maximum lag length to be considered 
+max.obs=60 # maximum number of past observations to be considered.
+
 # loading realtime data sets and unrevised data 
 load(paste(DirCode,'/data/sets.Rdata',sep=''))
 df.unrevised=read.csv(paste(DirCode,'/data/unrevised data.csv'
                             ,sep='')
-                      ,sep=';'
+                      ,sep=','
                       ,na.strings='NaN'
                       ,row.names=1
                       )
 overview.rt=read.csv(paste(DirCode,'/overview.csv',sep=''),row.names=1)
-overview.nr=read.csv(paste(DirCode,'/data/NonrevData overview.csv',sep=''),sep=';')
+overview.nr=read.csv(paste(DirCode,'/data/NonrevData overview.csv',sep=''),sep=',')
+overview.nr[,1]=gsub('-','.',overview.nr[,1])
+
+# dropping the saisonally adjusted series for now
+df.unrevised=df.unrevised[,-grep('.SA',colnames(df.unrevised))]
+overview.nr=overview.nr[-grep('.SA',overview.nr[,1]),]
 
 # transforming rownames (dates) of unrevised data accordingly
 df.ur.rownames=row.names(df.unrevised)
@@ -42,16 +53,14 @@ for (var.tlag in variables.tlag){
                                           ,overview.nr[overview.nr$Abbr==var.tlag
                                                        ,'Publication.Lag'])
         }
-# # cpi is included  in the realtime data set
-df.unrevised[,'CPI']=NULL
-
 ```
+
 ```{r,warning=F,echo=FALSE,cache=FALSE,eval=T,message=FALSE}
 
 
 # getting vintage dates that correspond to dates in rownames
 vint.names=names(sets)
-vint.last19=grep('99M12',vint.names)
+vint.last19=grep('99M12',vint.names)# last vintage of the 20th century
 vint.dates=vint.names
 vint.dates[1:vint.last19]=paste('19',vint.dates[1:vint.last19],sep='')
 vint.dates[(vint.last19+1):length(vint.dates)]=paste('20',vint.dates[(vint.last19+1):length(vint.dates)],sep='')
@@ -61,8 +70,9 @@ vint.dates[vint.missing.zeros]=gsub('M',':0',vint.dates[vint.missing.zeros])
 vint.dates=gsub('M',':',vint.dates)
 vintage=data.frame(name=vint.names,date=vint.dates)
 
-# dates in data matrices, both realtime and unrevised, must at least contain vintages. If not
-# a line needs to be added
+# dates in data matrices, both realtime and unrevised, must 
+# at least contain vintages (observation 2015.1 not existing yet, but vintage 2015.1).
+# If not a line needs to be added
 aux.match=match(vintage$date,row.names(df.unrevised))
 missing.dates=vintage$date[is.na(aux.match)]
 missing.dates=as.character(missing.dates)
@@ -105,14 +115,18 @@ forecast.all=vector('list',length(sets))
 
 for (vint.num in 1:length(sets)){
         set.rt=sets[[vint.num]]
-        set.last.date=vintage[grep(vintage$name[vint.num],vintage$name),'date']
+        set.last.date=vintage[
+                grep(paste(vintage$name[vint.num],'$',sep=''),vintage$name)
+                # $ is needed to get exactly the vintage required. 
+                # 1998M1 and not 1998M10,1998M11, 1998M12
+                ,'date']
         set.lst.obs=grep(set.last.date,row.names(set.rt))
         set.rt=set.rt[1:set.lst.obs,]
         set.unrevised=df.unrevised[row.names(set.rt),]
         set=cbind(set.rt,set.unrevised)
         
         # filtering those variables that cannot be transformed to change rates
-        # due to zeros.
+        # due to zeros.#### attention: this might lead to an unbalanced panel!
         set.aux=set
         set.aux[is.na(set)]=1
         chg.ok=colSums(set.aux==0)==0
@@ -123,27 +137,29 @@ for (vint.num in 1:length(sets)){
                   ,chg(set[,chg.ok],1)
                   ,chg(set[,chg.ok],12)
                   )
-        # window of max 60 month back
-        set=set[(nrow(set)-60+1):nrow(set),]
         
-        # pushing down all variables         
+        # window of max.obs month back
+        set=set[(nrow(set)-max.obs+1):nrow(set),]
+        
+        # pushing down all variables        
         variables=colnames(set)
         dates=row.names(set)
         set=data.frame(sapply(variables,push.down,set))
         row.names(set)=dates
         
         # spliting inflation and rest of set
-        colnames(set)[grep('PCPI_chg_12',colnames(set))]='infl'
+        colnames(set)[grep(target,'_chg_12',colnames(set))]='infl'
         infl.col=grep('infl',colnames(set))
         df.y=set[,infl.col,drop=F]
-        set.woinfl=set[,-infl.col]
+        set.woinfl=set[,-infl.col]# woinfl=without inflation
         
         for (i in 1:ncol(set.woinfl)){
                 df.x=cbind(df.y,set.woinfl[,i,drop=F])
-                if (i==1){forecast=bmafo(df.y,df.x,hor=12,max.lag=12)}else{
-                        forecast=rbind(forecast,bmafo(df.y,df.x,hor=12,max.lag=12))
+                if (i==1){forecast=bmafo(df.y,df.x,horizon,max.lag)}else{
+                        forecast=rbind(forecast,bmafo(df.y,df.x,horizon,max.lag))
                         }
                 }   #end model loop
+        forecast.all[[vint.num]]=forecast
         
         }#end vintage loop
 
