@@ -1,0 +1,153 @@
+---
+title: "Pseudo out-of-sample realtime experiment forecasting US inflation"
+author: "Dirk Ulbricht"
+date: "Tuesday, January 13, 2015"
+output: pdf_document
+---
+
+```{r,warning=F,echo=FALSE,cache=FALSE,eval=T,message=FALSE}
+
+DirCode='C:/Users/Dirk/Documents/GitHub/bubblesbreakdowns'
+DirCode='h:/Git/bubblesbreakdowns'
+source(paste(DirCode,'/lag.exact.R',sep=''))
+source(paste(DirCode,'/diff.R',sep=''))
+source(paste(DirCode,'/chg.R',sep=''))
+
+# loading realtime data sets and unrevised data 
+load(paste(DirCode,'/data/sets.Rdata',sep=''))
+df.unrevised=read.csv(paste(DirCode,'/data/unrevised data.csv'
+                            ,sep='')
+                      ,sep=';'
+                      ,na.strings='NaN'
+                      ,row.names=1
+                      )
+overview.rt=read.csv(paste(DirCode,'/overview.csv',sep=''),row.names=1)
+overview.nr=read.csv(paste(DirCode,'/data/NonrevData overview.csv',sep=''),sep=';')
+
+# transforming rownames (dates) of unrevised data accordingly
+df.ur.rownames=row.names(df.unrevised)
+dates=strsplit(df.ur.rownames,'\\.')
+dates=sapply(dates,function(x) x[c(3,2)])
+dates=apply(dates,2,function(x) paste(x,collapse=':'))
+row.names(df.unrevised)=dates
+```
+Some of the variables that are not subject to data revisions are published with a publication lag nontheless. 
+
+```{r,warning=F,echo=FALSE,cache=FALSE,eval=T}
+# make sure, the  right columns are addressed (same ordering in overview and df)
+df.unrevised=df.unrevised[,as.character(overview.nr[,1])]
+variables.tlag=overview.nr[overview.nr$Publication.Lag!=0,'Abbreviation']
+for (var.tlag in variables.tlag){
+        df.unrevised[,var.tlag]=lag.exact(df.unrevised[,var.tlag,drop=F]
+                                          ,overview.nr[overview.nr$Abbr==var.tlag
+                                                       ,'Publication.Lag'])
+        }
+# # cpi is included  in the realtime data set
+df.unrevised[,'CPI']=NULL
+
+```
+```{r,warning=F,echo=FALSE,cache=FALSE,eval=T,message=FALSE}
+
+
+# getting vintage dates that correspond to dates in rownames
+vint.names=names(sets)
+vint.last19=grep('99M12',vint.names)
+vint.dates=vint.names
+vint.dates[1:vint.last19]=paste('19',vint.dates[1:vint.last19],sep='')
+vint.dates[(vint.last19+1):length(vint.dates)]=paste('20',vint.dates[(vint.last19+1):length(vint.dates)],sep='')
+vint.missing.zeros=grep('M[1-9]$',vint.dates)
+# vint.dates[vint.missing.zeros]=paste('0',vint.dates[vint.missing.zeros],sep='')
+vint.dates[vint.missing.zeros]=gsub('M',':0',vint.dates[vint.missing.zeros])
+vint.dates=gsub('M',':',vint.dates)
+vintage=data.frame(name=vint.names,date=vint.dates)
+
+# dates in data matrices, both realtime and unrevised, must at least contain vintages. If not
+# a line needs to be added
+aux.match=match(vintage$date,row.names(df.unrevised))
+missing.dates=vintage$date[is.na(aux.match)]
+missing.dates=as.character(missing.dates)
+df.unrevised[missing.dates,]=NA
+
+# are sets to short, too?
+set.rt=sets[[193]]
+aux.match=match(vintage$date,row.names(set.rt))
+missing.dates=vintage$date[is.na(aux.match)]
+missing.dates=as.character(missing.dates)
+# add missing lines
+sets=lapply(sets,function(x){x[missing.dates,]=NA
+                             return(x)})
+
+# sourcing necassary scripts for estimation and forecast (for a description see "olsbmalag.Rmd")
+source(paste(DirCode,'/bmafo.R',sep=''))
+library(BMA)
+```
+1. Each forecast origin, the set of unrevised data is shortened so that it includes only that observations that had been available up to then. 
+2. The set of realtime and unrevised data are combined.
+3. For each variable in the set, 1st and 2nd differences, month-on-month and year-on-year change rates are computed and added.
+4. Only the 60 most recent observations are considered to make regressions more adaptible to change.
+5. The each of the sets is used to estimate the different models and to compute the 12 month-horizon forecasts.
+
+```{r,warning=F,echo=FALSE,cache=FALSE,eval=T,message=FALSE}
+
+# possible loop -----------------------------------------------------------
+
+push.down=function(variable,set){
+        # pushes all variables to the forecast origin 
+                aux=set[,variable]
+                naux=length(aux)
+                values=aux[is.na(aux)==F]
+                nvalues=length(values)
+                aux2=rep(NA,naux)
+                aux2[(naux-nvalues+1):naux]=values
+                return(aux2)
+                }
+forecast.all=vector('list',length(sets))
+
+for (vint.num in 1:length(sets)){
+        set.rt=sets[[vint.num]]
+        set.last.date=vintage[grep(vintage$name[vint.num],vintage$name),'date']
+        set.lst.obs=grep(set.last.date,row.names(set.rt))
+        set.rt=set.rt[1:set.lst.obs,]
+        set.unrevised=df.unrevised[row.names(set.rt),]
+        set=cbind(set.rt,set.unrevised)
+        
+        # filtering those variables that cannot be transformed to change rates
+        # due to zeros.
+        set.aux=set
+        set.aux[is.na(set)]=1
+        chg.ok=colSums(set.aux==0)==0
+        
+        # adding transformations
+        set=cbind(set,diff(set,1,1)
+                  ,diff(set,2,1)
+                  ,chg(set[,chg.ok],1)
+                  ,chg(set[,chg.ok],12)
+                  )
+        # window of max 60 month back
+        set=set[(nrow(set)-60+1):nrow(set),]
+        
+        # pushing down all variables         
+        variables=colnames(set)
+        dates=row.names(set)
+        set=data.frame(sapply(variables,push.down,set))
+        row.names(set)=dates
+        
+        # spliting inflation and rest of set
+        colnames(set)[grep('PCPI_chg_12',colnames(set))]='infl'
+        infl.col=grep('infl',colnames(set))
+        df.y=set[,infl.col,drop=F]
+        set.woinfl=set[,-infl.col]
+        
+        for (i in 1:ncol(set.woinfl)){
+                df.x=cbind(df.y,set.woinfl[,i,drop=F])
+                if (i==1){forecast=bmafo(df.y,df.x,hor=12,max.lag=12)}else{
+                        forecast=rbind(forecast,bmafo(df.y,df.x,hor=12,max.lag=12))
+                        }
+                }   #end model loop
+        
+        }#end vintage loop
+
+# test=apply(set.woinfl,2,function(x) bmafo(df.y,x,hor=12,max.lag=12))
+# test=bmafo(df.y,df.x,hor=12,max.lag=12)
+
+```

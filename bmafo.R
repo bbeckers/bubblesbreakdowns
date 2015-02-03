@@ -4,7 +4,11 @@ function(y.df,x.df,horizon,max.lag){
         # ols model for predicting # of horizons ahead with a maximum lag of max.lag.
         # requires BMA package. y.df and x.df should be of same length and complete cases.
         # The resulting forecast is row name is the row name of the last observation and
-        # "H"+horizon.
+        # "H"+horizon. 
+#         y.df=df.y 
+#         x.df=df.x 
+#         horizon=12 
+#         max.lag=12
         lag.exact<-function(x.df,lag.length){
                 # Returns a dataframe of the lags of x.df with lag.length
                 x.n=ncol(x.df)
@@ -37,15 +41,18 @@ function(y.df,x.df,horizon,max.lag){
                 return(plugin.values)
                 }
         x.df.lag=lag.hormax(x.df,horizon,max.lag)
-        # making sure, that all lags employed have at least one observation.
-        at.least.one.obs=colSums(is.na(x.df.lag))!=nrow(x.df.lag)
-        x.df.lag=x.df.lag[,at.least.one.obs]
-        #         # restricting to complete cases
-        #         xy.complete=complete.cases(cbind(x.df.lag,y.df))
-        #         nobs=sum(xy.complete)
-        #         x.df.lag=as.matrix(x.df.lag[xy.complete,])
-        #         y=y.df[xy.complete,]
-        y=as.vector(y.df)
+        
+        # making sure, that all lags employed have at least 20 observations.
+        ind20=colSums(is.na(x.df.lag)==F)>=20
+        x.df.lag=x.df.lag[,ind20]
+        
+        # restricting to complete cases
+        xy=cbind(x.df.lag,y.df)
+                xy.complete=complete.cases(xy)
+                nobs=sum(xy.complete)
+                x.df.lag=as.matrix(x.df.lag[xy.complete,])
+                y=y.df[xy.complete,]
+        y=as.vector(y)
         bma.res=bicreg(x.df.lag,y)
         plugin.values=plugin.values(x.df,max.lag)
         colnames(plugin.values)=colnames(x.df.lag)

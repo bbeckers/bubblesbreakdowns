@@ -8,6 +8,7 @@ output: pdf_document
 ```{r,warning=F,echo=FALSE,cache=FALSE,eval=T,message=FALSE}
 
 DirCode='C:/Users/Dirk/Documents/GitHub/bubblesbreakdowns'
+DirCode='h:/Git/bubblesbreakdowns'
 source(paste(DirCode,'/lag.exact.R',sep=''))
 source(paste(DirCode,'/diff.R',sep=''))
 source(paste(DirCode,'/chg.R',sep=''))
@@ -100,10 +101,9 @@ push.down=function(variable,set){
                 aux2[(naux-nvalues+1):naux]=values
                 return(aux2)
                 }
-
 forecast.all=vector('list',length(sets))
 
-for (vint.num in 6:length(sets)){
+for (vint.num in 1:length(sets)){
         set.rt=sets[[vint.num]]
         set.last.date=vintage[grep(vintage$name[vint.num],vintage$name),'date']
         set.lst.obs=grep(set.last.date,row.names(set.rt))

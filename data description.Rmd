@@ -6,8 +6,8 @@ output: pdf_document
 ---
 
 ```{r,echo=-(1:10)}
-DirCode='H:/git/zeit-2/bubblesbreakdowns'
-DirCode='C:/Users/Dirk/Documents/GitHub/bubblesbreakdowns'
+DirCode='H:/git/bubblesbreakdowns'
+# DirCode='C:/Users/Dirk/Documents/GitHub/bubblesbreakdowns'
 load(paste(DirCode,'/data/sets.Rdata',sep=''))
 df.unrevised=read.csv(paste(DirCode,'/data/unrevised data.csv'
                             ,sep='')
