@@ -1,7 +1,7 @@
 # ------------------------------------------------------------------------
 # Starting values (do not comment) ---------------------------------------------------------
 # ------------------------------------------------------------------------
-wd='H:/Fred'
+# wd='H:/Fred'
 wd='C:/Users/Dirk/Documents/GitHub/bubblesbreakdowns'
 wd='h:/git/bubblesbreakdowns'
 setwd(wd)
@@ -158,6 +158,14 @@ dir.rt=paste(wd,'/data',sep='')
 # eval(parse(file='out'))
 # }
 #
+# eliminating non-numeric elements ----------------------------------------
+# for (variable in variables){
+#         aux=eval(parse(text=variable))
+#         aux[aux=='#N/A']=NA
+#         write.csv(aux,'test.csv')
+#         aux=read.csv('test.csv',row.names=1)
+#         eval(parse(text=paste(variable,'=aux',sep='')))
+# }
 # save.image(paste(wd,"/data/realtime.RData",sep=''))
 #
 # ------------------------------------------------------------------------
@@ -166,70 +174,87 @@ dir.rt=paste(wd,'/data',sep='')
 load(paste(wd,"/data/realtime.RData",sep=''))
 # checking availability of each variable ----------------------------------
 # overview is a dataframe helping here
-variables=ls()
-variables=variables[grep('[A-Z]',variables)]
-overview=data.frame('nrows'=rep(NA,length(variables)),row.names=variables)
-startaddress='http://www.philadelphiafed.org/research-and-data/real-time-center/real-time-data/data-files/'
-for (variable in variables){
-        aux=eval(parse(text=variable))
-        overview[variable,'nrows']=nrow(aux)
-        overview[variable,'ncols']=ncol(aux)
-        overview[variable,'first obs']=row.names(aux)[1]
-        overview[variable,'first obs year']=as.numeric(strsplit(overview[variable,'first obs'],':')[[1]][1])
-        overview[variable,'first obs month']=as.numeric(strsplit(overview[variable,'first obs'],':')[[1]][2])
-        overview[variable,'last obs']=row.names(aux)[nrow(aux)]
-        overview[variable,'last obs year']=as.numeric(strsplit(overview[variable,'last obs'],':')[[1]][1])
-        overview[variable,'last obs month']=as.numeric(strsplit(overview[variable,'last obs'],':')[[1]][2])
-        overview[variable,'first vintage']=colnames(aux)[1]
-        overview[variable,'first vintage']=gsub(variable,'',overview[variable,'first vintage'])
-        overview[variable, 'first vintage year']=as.numeric(strsplit(overview[variable, 'first vintage'],'M')[[1]][1])
-        if (overview[variable, 'first vintage year']<=14){
-                overview[variable, 'first vintage year']=overview[variable, 'first vintage year']+2000}else{
-                        overview[variable, 'first vintage year']=overview[variable, 'first vintage year']+1900}
-        overview[variable, 'first vintage month']=as.numeric(strsplit(overview[variable, 'first vintage'],'M')[[1]][2])
-        overview[variable,'last vintage']=colnames(aux)[ncol(aux)]
-        overview[variable,'last vintage']=gsub(variable,'',overview[variable,'last vintage'])
-        overview[variable, 'last vintage year']=as.numeric(strsplit(overview[variable, 'last vintage'],'M')[[1]][1])
-        if (overview[variable, 'last vintage year']<=14){
-                overview[variable, 'last vintage year']=overview[variable, 'last vintage year']+2000}else{
-                        overview[variable, 'last vintage year']=overview[variable, 'last vintage year']+1900}
-        overview[variable, 'last vintage month']=as.numeric(strsplit(overview[variable, 'last vintage'],'M')[[1]][2])
-        varaddress=paste(startaddress,variable,sep='')
-        varhtml=readLines(varaddress)
-        name=varhtml[grep('title',varhtml)]
-        overview[variable,'description']=gsub('<title>||</title>||- historical real-time data - Philadelphia Fed','',name)
-        rm(name,varaddress,varhtml,aux)
-}
-rm(startaddress)
-# Getting rid of all variables that start in 2009-8 or later -------------
+# variables=ls()
+# variables=variables[grep('[A-Z]',variables)]
+# overview=data.frame('nrows'=rep(NA,length(variables)),row.names=variables)
+# startaddress='http://www.philadelphiafed.org/research-and-data/real-time-center/real-time-data/data-files/'
+# for (variable in variables){
+#         aux=eval(parse(text=variable))
+#         overview[variable,'nrows']=nrow(aux)
+#         overview[variable,'ncols']=ncol(aux)
+#         overview[variable,'first obs']=row.names(aux)[1]
+#         overview[variable,'first obs year']=as.numeric(strsplit(overview[variable,'first obs'],':')[[1]][1])
+#         overview[variable,'first obs month']=as.numeric(strsplit(overview[variable,'first obs'],':')[[1]][2])
+#         overview[variable,'last obs']=row.names(aux)[nrow(aux)]
+#         overview[variable,'last obs year']=as.numeric(strsplit(overview[variable,'last obs'],':')[[1]][1])
+#         overview[variable,'last obs month']=as.numeric(strsplit(overview[variable,'last obs'],':')[[1]][2])
+#         overview[variable,'first vintage']=colnames(aux)[1]
+#         overview[variable,'first vintage']=gsub(variable,'',overview[variable,'first vintage'])
+#         overview[variable, 'first vintage year']=as.numeric(strsplit(overview[variable, 'first vintage'],'M')[[1]][1])
+#         if (overview[variable, 'first vintage year']<=14){
+#                 overview[variable, 'first vintage year']=overview[variable, 'first vintage year']+2000}else{
+#                         overview[variable, 'first vintage year']=overview[variable, 'first vintage year']+1900}
+#         overview[variable, 'first vintage month']=as.numeric(strsplit(overview[variable, 'first vintage'],'M')[[1]][2])
+#         overview[variable,'last vintage']=colnames(aux)[ncol(aux)]
+#         overview[variable,'last vintage']=gsub(variable,'',overview[variable,'last vintage'])
+#         overview[variable, 'last vintage year']=as.numeric(strsplit(overview[variable, 'last vintage'],'M')[[1]][1])
+#         if (overview[variable, 'last vintage year']<=14){
+#                 overview[variable, 'last vintage year']=overview[variable, 'last vintage year']+2000}else{
+#                         overview[variable, 'last vintage year']=overview[variable, 'last vintage year']+1900}
+#         overview[variable, 'last vintage month']=as.numeric(strsplit(overview[variable, 'last vintage'],'M')[[1]][2])
+#         varaddress=paste(startaddress,variable,sep='')
+#         varhtml=readLines(varaddress)
+#         name=varhtml[grep('title',varhtml)]
+#         overview[variable,'description']=gsub('<title>||</title>||- historical real-time data - Philadelphia Fed','',name)
+#         rm(name,varaddress,varhtml,aux)
+# }
+# rm(startaddress)
+
+
+# some of the realtime data have not changed further back, say before 1998. 
+# Thus, realtime data can be produced after this is checked for, adding more
+# distant vintages using data, that has not changed over the existing vintages.
+# didn't work out
+# source('earliest.chg.R')
+# for (variable in variables){
+#         aux=earliest.chg(variable)
+#         overview$first.lastunrevised[grep(variable,row.names(overview))]=aux[1]
+#         overview$first.complete[grep(variable,row.names(overview))]=aux[2]
+#         overview$first.change[grep(variable,row.names(overview))]=aux[3]
+# }
+
+
+# Getting rid of all variables that start in 1998 or later -------------
 # (mainly household spending variables)
 overview.complete=overview
-overview=overview[overview$ncols>64,]
+overview=overview[overview$'first vintage year'<1998,]
 variables=row.names(overview)
 variables.rm=row.names(overview.complete[overview.complete$ncols<=64,])
 rm(list=variables.rm)
 overview=overview[order(overview$'first vintage year'),]
+
 # resizing variables to the smallest common (vintage) sample --------------
-vintages=colnames(POP)
-vintages=gsub('POP','',vintages)
+
+# defining variable name and variable with smallest set of vintages
+variable.smallest.name=row.names(overview)[which.min(overview$ncols)]
+variable.smallest=eval(parse(text=variable.smallest.name))
+vintages=colnames(variable.smallest)
+vintages=gsub(variable.smallest.name,'',vintages)
 for (variable in variables){
         colselection=paste(variable,vintages,sep='')
         comm=paste(variable,'=',variable,'[,colselection]',sep='')
         eval(parse(text=comm))
 }
-# eliminating non-numeric elements ----------------------------------------
-for (variable in variables){
-        aux=eval(parse(text=variable))
-        aux[aux=='#N/A']=NA
-        write.csv(aux,'test.csv')
-        aux=read.csv('test.csv',row.names=1)
-        eval(parse(text=paste(variable,'=aux',sep='')))
-}
-# creating specimen and resizing dataframes -------------------------------------------------------
-specimen.nrow=nrow(IPM)
-specimen.ncol=ncol(IPM)
+
+# creating specimen of nobs=maximum observations in a variable, and resizing dataframes -------------------------------------------------------
+specimen.nrow=max(overview$nrows)
+specimen.ncol=min(overview$ncol)
 specimen=data.frame(matrix(NA,nrow=specimen.nrow,ncol=specimen.ncol))
-row.names(specimen)=row.names(IPM)
+colnames(specimen)=colnames(variable.smallest)
+# attaching row.names of the variable with most observations
+variable.obsmax.name=row.names(overview)[which.max(overview$nrows)]
+variable.obsmax=eval(parse(text=variable.obsmax.name))
+row.names(specimen)=row.names(variable.obsmax)
 for (variable in variables){
         aux=eval(parse(text=variable))
         aux.specimen=specimen
@@ -238,41 +263,31 @@ for (variable in variables){
         aux=aux.specimen
         eval(parse(text=paste(variable,'=aux',sep='')))
 }
-rm(aux.specimen,aux,specimen)
-# First observation in remaining variables and vintages, deleting useless rows -------------------
-for (variable in variables){
-        overview[variable,'first obs subsample']=row.names(eval(parse(text=variable)))[complete.cases(eval(parse(text=variable)))][1]
-        overview[order(overview$'first obs subsample'),]
-}
-fobs=overview[order(overview$'first obs subsample'),'first obs subsample'][1]
-fobs.row.number=grep(fobs,row.names(IPM))
-for (variable in variables){
-        aux=eval(parse(text=variable))
-        aux=aux[fobs.row.number:nrow(aux),]
-        eval(parse(text=paste(variable,'=aux',sep='')))
-}
-rm(aux)
+
+
 # Creating sets of vintages -----------------------------------------------
-vintage=vintages[10]
+# vintage=vintages[10] # for testing purposes
+
 vintage.extractor=function(variable,vintage){
-        # returns a vintage of a variable
-        vintage.colnum=grep(vintage,colnames(CUM))
-        aux=eval(parse(text=variable))[vintage.colnum]
+        # extracts one specific vintage of a variable
+        vintage.column=grep(vintage,colnames(specimen))
+        aux=eval(parse(text=variable))[vintage.column]
         colnames(aux)=variable
         return(aux)
 }
 set.maker=function(vintage){
         # puts corresponding vintages of all variables together in one set
-        aux=data.frame(matrix(NA,nrow=nrow(H),ncol=length(variables)))
+        aux=data.frame(matrix(NA,nrow=nrow(specimen),ncol=length(variables)))
         colnames(aux)=variables
-        row.names(aux)=row.names(POP)
+        row.names(aux)=row.names(specimen)
         for (variable in variables){
                 aux[,variable]=vintage.extractor(variable,vintage)
         }
         return(aux)
 }
+
 # creating a list containing all vintage sets -----------------------------
-sets=vector('list',length=193)
+sets=vector('list',length=ncol(specimen))
 names(sets)=vintages
 for (vintage in vintages){
         sets[[vintage]]=set.maker(vintage)
