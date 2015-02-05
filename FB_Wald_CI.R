@@ -71,6 +71,6 @@ pvalW = 1-pchisq(Wstat,k)
 # Confidence interval for fitted surprise losses
 SLfitCI = Z%*%deltahat-qnorm(1-alpha)*sqrt(diag((Z%*%Omegahat%*%t(Z)/n)));
 
-results = list(wstat=Wstat,pvalw=pvalW,slfitci=SLfitCI)
+results = list(Wstat=Wstat,pvalW=pvalW,SLfitCI=SLfitCI)
 return(results)
 }

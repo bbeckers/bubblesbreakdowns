@@ -13,6 +13,7 @@ olsself=function(y,p){
 # Z: (T-p)x(p+1) matrix of regressors
 
 ## Function
+        y=as.matrix(y)
 T = nrow(y)
 
 Z = matrix(NA,T-p,p)
@@ -28,6 +29,7 @@ res = y-Z%*%b
 sigma_u = t(res)%*%res/(T-p-2)
 # Information criteria for determining the optimal lag length
 BIC = T*log(sigma_u)+(p+1)*log(T)
-results = list(b,res,BIC,Z)
+
+results = list(b=b,res=res,BIC=BIC,Z=Z)
 return(results)
 }
