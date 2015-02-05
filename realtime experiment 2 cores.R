@@ -7,6 +7,58 @@ registerDoParallel(cl, cores = detectCores() )
 data = foreach(i = 1:length(filenames), .packages = c("ncdf","chron","stats"),
                .combine = rbind) %dopar% {
                        try({
+                               
+                               # make sure, the  right columns are addressed (same ordering in overview and df)
+                               df.unrevised=df.unrevised[,as.character(overview.nr[,1])]
+                               variables.tlag=overview.nr[overview.nr$Publication.Lag!=0,'Abbreviation']
+                               for (var.tlag in variables.tlag){
+                                       df.unrevised[,var.tlag]=lag.exact(df.unrevised[,var.tlag,drop=F]
+                                                                         ,overview.nr[overview.nr$Abbr==var.tlag
+                                                                                      ,'Publication.Lag'])
+                               }
+                               # getting vintage dates that correspond to dates in rownames
+                               vint.names=names(sets)
+                               vint.last19=grep('99M12',vint.names)# last vintage of the 20th century
+                               vint.dates=vint.names
+                               vint.dates[1:vint.last19]=paste('19',vint.dates[1:vint.last19],sep='')
+                               vint.dates[(vint.last19+1):length(vint.dates)]=paste('20',vint.dates[(vint.last19+1):length(vint.dates)],sep='')
+                               vint.missing.zeros=grep('M[1-9]$',vint.dates)
+                               # vint.dates[vint.missing.zeros]=paste('0',vint.dates[vint.missing.zeros],sep='')
+                               vint.dates[vint.missing.zeros]=gsub('M',':0',vint.dates[vint.missing.zeros])
+                               vint.dates=gsub('M',':',vint.dates)
+                               vintage=data.frame(name=vint.names,date=vint.dates)
+                               
+                               # dates in data matrices, both realtime and unrevised, must 
+                               # at least contain vintages (observation 2015.1 not existing yet, but vintage 2015.1).
+                               # If not a line needs to be added
+                               aux.match=match(vintage$date,row.names(df.unrevised))
+                               missing.dates=vintage$date[is.na(aux.match)]
+                               missing.dates=as.character(missing.dates)
+                               df.unrevised[missing.dates,]=NA
+                               
+                               # are sets to short, too?
+                               set.rt=sets[[193]]
+                               aux.match=match(vintage$date,row.names(set.rt))
+                               missing.dates=vintage$date[is.na(aux.match)]
+                               missing.dates=as.character(missing.dates)
+                               # add missing lines
+                               sets=lapply(sets,function(x){x[missing.dates,]=NA
+                                                            return(x)})
+                               
+                               # sourcing necassary scripts for estimation and forecast (for a description see "olsbmalag.Rmd")
+                               source(paste(DirCode,'/bmafo.R',sep=''))
+                               library(BMA)
+                               push.down=function(variable,set){
+                                       # pushes all variables to the forecast origin 
+                                       aux=set[,variable]
+                                       naux=length(aux)
+                                       values=aux[is.na(aux)==F]
+                                       nvalues=length(values)
+                                       aux2=rep(NA,naux)
+                                       aux2[(naux-nvalues+1):naux]=values
+                                       return(aux2)
+                               }
+                               forecast.all=vector('list',length(sets))
                                for (vint.num in 1:length(sets)){
                                        set.rt=sets[[vint.num]]
                                        set.last.date=vintage[
@@ -56,6 +108,6 @@ data = foreach(i = 1:length(filenames), .packages = c("ncdf","chron","stats"),
                                        forecast.all[[vint.num]]=forecast
                                        
                                }#end vintage
-                       })
+                       })stopCluster(cl)
                }
 stopCluster(cl)

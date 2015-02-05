@@ -35,6 +35,10 @@ overview.nr[,1]=gsub('-','.',overview.nr[,1])
 df.unrevised=df.unrevised[,-grep('.SA',colnames(df.unrevised))]
 overview.nr=overview.nr[-grep('.SA',overview.nr[,1]),]
 
+# dropping "MCOILWTICO" as it is too short (starting in 1986)
+df.unrevised=df.unrevised[,-grep("MCOILWTICO",colnames(df.unrevised))]
+overview.nr=overview.nr[-grep("MCOILWTICO",overview.nr[,1]),]
+
 # transforming rownames (dates) of unrevised data accordingly
 df.ur.rownames=row.names(df.unrevised)
 dates=strsplit(df.ur.rownames,'\\.')
@@ -144,11 +148,14 @@ for (vint.num in 1:length(sets)){
         # pushing down all variables        
         variables=colnames(set)
         dates=row.names(set)
+        for (variable in variables){
+                set[,variable]=push.down(variable,set)
+        }
         set=data.frame(sapply(variables,push.down,set))
         row.names(set)=dates
         
         # spliting inflation and rest of set
-        colnames(set)[grep(target,'_chg_12',colnames(set))]='infl'
+        colnames(set)[grep(paste(target,'_chg_12',sep=''),colnames(set))]='infl'
         infl.col=grep('infl',colnames(set))
         df.y=set[,infl.col,drop=F]
         set.woinfl=set[,-infl.col]# woinfl=without inflation

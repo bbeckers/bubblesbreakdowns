@@ -19,6 +19,8 @@ m0 = 60
 n = 40
 # Forecast horizon
 tau = 1
+# Bandwidth for HAC estimator
+bw = 0
 
 # List (formerly cell) of regressors of insample regression
 
@@ -44,8 +46,8 @@ pgrc = matrix(NA,n.bt,Nsim)# p value of giac. ross. from orig. code (overfitt. c
 
 for (nsim in 1:Nsim){# nsim=1
         set.seed(nsim)
-        epsx = matrix(rnorm(T+1,1),ncol=1) # white noise
-        epsy = matrix(rnorm(T,1),ncol=1) # white noise
+        epsx = matrix(rnorm(T+1,0,1),ncol=1) # white noise
+        epsy = matrix(rnorm(T,0,1),ncol=1) # white noise
         results=vector('list',n.bt)
         # Time series with break in y
         x = matrix(NA,T+1,1)
@@ -98,13 +100,7 @@ for (nsim in 1:Nsim){# nsim=1
         # Evaluate forecast performance
         for (j in 1:(T-tau-n-m0+1)){
                 nna=is.na(Y[,j])==F
-                results[j] = grtest(LO[,j,drop=F],LI[,j,drop=F],Y[nna,j,drop=F],cbind(1,X[nna,j,drop=F]),tau,s)
+                results[j] = grtest(LO[,j,drop=F],LI[,j,drop=F],Y[nna,j,drop=F],cbind(1,X[nna,j,drop=F]),s,bw)
         }
         nsim
 }
-
-# 
-# figure(1)
-# plot(tc)
-# figure(2)
-# plot(pc)
