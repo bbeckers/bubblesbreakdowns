@@ -9,15 +9,23 @@ output: pdf_document
 
 DirCode='C:/Users/Dirk/Documents/GitHub/bubblesbreakdowns'
 DirCode='h:/Git/bubblesbreakdowns'
+
+# sourcing necassary scripts for estimation and forecast (for a description see "olsbmalag.Rmd")
 source(paste(DirCode,'/lag.exact.R',sep=''))
 source(paste(DirCode,'/diff.R',sep=''))
 source(paste(DirCode,'/chg.R',sep=''))
+source(paste(DirCode,'/bmafo.R',sep=''))
+library("BMA")
 
 # setting some values
-horizon=13 # inflation is published with on month lag.
+horizon=12 # inflation is published with on month lag, but in the following, the variables
+# are only lagged.
 target='PCPIX' # core inflation
 max.lag=12 # maximum lag length to be considered 
-max.obs=60 # maximum number of past observations to be considered.
+max.obs=-1 # maximum number of past observations to be considered (rolling estimation);
+# setting negative window turns that of (recursive estimation)
+# rolling window size will be: max.obs-max.lag-horizon, as lags need to be considered for
+# estimation. 
 
 # loading realtime data sets and unrevised data 
 load(paste(DirCode,'/data/sets.Rdata',sep=''))
@@ -30,12 +38,14 @@ df.unrevised=read.csv(paste(DirCode,'/data/unrevised data.csv'
 overview.rt=read.csv(paste(DirCode,'/overview.csv',sep=''),row.names=1)
 overview.nr=read.csv(paste(DirCode,'/data/NonrevData overview.csv',sep=''),sep=',')
 overview.nr[,1]=gsub('-','.',overview.nr[,1])
+# Saving a complete version of unrevised complete (necessary to get target variable without lags)
+df.unrevised.compl=df.unrevised
 
 # dropping the saisonally adjusted series for now
 df.unrevised=df.unrevised[,-grep('.SA',colnames(df.unrevised))]
 overview.nr=overview.nr[-grep('.SA',overview.nr[,1]),]
 
-# dropping "MCOILWTICO" as it is too short (starting in 1986)
+# dropping "MCOILWTICO" as it is too short (starting in 1986, first iteration here is 1983:7)
 df.unrevised=df.unrevised[,-grep("MCOILWTICO",colnames(df.unrevised))]
 overview.nr=overview.nr[-grep("MCOILWTICO",overview.nr[,1]),]
 
@@ -91,9 +101,8 @@ missing.dates=as.character(missing.dates)
 sets=lapply(sets,function(x){x[missing.dates,]=NA
                              return(x)})
 
-# sourcing necassary scripts for estimation and forecast (for a description see "olsbmalag.Rmd")
-source(paste(DirCode,'/bmafo.R',sep=''))
-library(BMA)
+
+
 ```
 1. Each forecast origin, the set of unrevised data is shortened so that it includes only that observations that had been available up to then. 
 2. The set of realtime and unrevised data are combined.
@@ -117,7 +126,7 @@ push.down=function(variable,set){
                 }
 forecast.all=vector('list',length(sets))
 
-for (vint.num in 1:length(sets)){
+for (vint.num in 194:length(sets)){
         set.rt=sets[[vint.num]]
         set.last.date=vintage[
                 grep(paste(vintage$name[vint.num],'$',sep=''),vintage$name)
@@ -143,7 +152,7 @@ for (vint.num in 1:length(sets)){
                   )
         
         # window of max.obs month back
-        set=set[(nrow(set)-max.obs+1):nrow(set),]
+        if (max.obs>0){set=set[(nrow(set)-max.obs+1):nrow(set),]}
         
         # pushing down all variables        
         variables=colnames(set)

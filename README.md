@@ -14,3 +14,5 @@ There are ?? sets saved as sets. Produces "sets.RData", "overview.csv" (containi
 - the unrevised data are lagged according to their publication lags given in NonrevData overview
 - "bmafo.R" is used to identify the best lag structure of an autoregressive model including the target (core inflation rate) and one additional regressors. bmafo.R is described in "olsbmalag.Rmd". Then a 13 month horizon forecast is made and stored in "forecast.all"
 
+## computing confidence bands of the surprise losses
+forecast losse.R

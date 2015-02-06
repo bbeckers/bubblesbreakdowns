@@ -1,13 +1,13 @@
 bmafo <-function(df.y,df.x,horizon,max.lag){
         # building on lag.exact, lag.hormax and plugin.values, the functions estimates a 
         # ols model for predicting # of horizons ahead with a maximum lag of max.lag.
-        # requires BMA package. df.y and df.x should be of same length and complete cases.
-        # The resulting forecast is row name is the row name of the last observation and
-        # "H"+horizon. 
-        #         df.y=df.y 
-        #         df.x=df.x 
-        #         horizon=12 
-        #         max.lag=12
+        # Requires BMA package. df.y and df.x should be of same length.
+        # Returns: data.frame with one row including forecast of best fit model (bma.fit)
+        # the horizon, number of observations (nobs), mean squared insample errors (mse),
+        # names of the explanatory variables
+        # received as input (names), a logical value indicating if non-endogenous variable
+        # was significant (useful), a list of significant coefficients.
+
         lag.exact<-function(df.x,lag.length){
                 # Returns a dataframe of the lags of df.x with lag.length
                 x.n=ncol(df.x)
@@ -44,7 +44,6 @@ bmafo <-function(df.y,df.x,horizon,max.lag){
         # making sure, that all lags employed have at least 20 observations.
         ind20=colSums(is.na(df.x.lag)==F)>=20
         df.x.lag=df.x.lag[,ind20]
-        
         # restricting to complete cases
         xy=cbind(df.x.lag,df.y)
         xy.complete=complete.cases(xy)
@@ -52,22 +51,31 @@ bmafo <-function(df.y,df.x,horizon,max.lag){
         df.x.lag=as.matrix(df.x.lag[xy.complete,])
         y=df.y[xy.complete,]
         y=as.vector(y)
-        # estimation and prediction
+        # getting optimal model using bma
         bma.res=bicreg(df.x.lag,y)
+        # fitted values of best model
+        bma.res$yhat=cbind(1,df.x.lag)%*%bma.res$ols[1,]
+        # residuals
+        bma.res$resid=bma.res$yhat-y
+        # sum of squared residuals
+        bma.res$msr=mean(bma.res$resid^2)
+        # forecast
         plugin.values=plugin.values(df.x,max.lag)
-        colnames(plugin.values)=colnames(df.x.lag)
-        bma.fc=predict(bma.res,newdata=plugin.values,topmodels=1)$mean  
-        names(bma.fc)=paste(row.names(df.y)[xy.complete][nobs],horizon,sep='H')
+        bma.res$fc=sum(cbind(1,plugin.values)*c(bma.res$ols[1,]))
+        # retrieving list of names of coefficients        
         bma.coefs=names(bma.res$ols[1,-1])[bma.res$ols[1,-1]!=0]
         coefs=paste(bma.coefs,collapse=',')
+        # are variables other than the endogenous significant, at all?
         useful=length(grep(colnames(df.y),bma.coefs))<length(bma.coefs)
-        result=data.frame(bma.fc
+        result=data.frame(bma.fc=bma.res$fc
+                          ,horizon
                           ,nobs
-                          ,residvar=bma.res$residvar[1]
+                          ,msr=bma.res$msr
                           ,names=paste(colnames(df.x)
                                        ,collapse=',')
                           ,useful=useful
                           ,coefficients=coefs
+                          
         )
         return(result)
 }
