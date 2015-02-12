@@ -20,7 +20,7 @@ library("BMA")
 # setting some values
 horizon=12 # inflation is published with on month lag, but in the following, the variables
 # are only lagged.
-target='PCPIX' # core inflation
+target='IPT' # core inflation
 max.lag=12 # maximum lag length to be considered 
 max.obs=-1 # maximum number of past observations to be considered (rolling estimation);
 # setting negative window turns that of (recursive estimation)
@@ -126,7 +126,7 @@ push.down=function(variable,set){
                 }
 forecast.all=vector('list',length(sets))
 
-for (vint.num in 194:length(sets)){
+for (vint.num in 358:1){
         set.rt=sets[[vint.num]]
         set.last.date=vintage[
                 grep(paste(vintage$name[vint.num],'$',sep=''),vintage$name)
@@ -164,22 +164,23 @@ for (vint.num in 194:length(sets)){
         row.names(set)=dates
         
         # spliting inflation and rest of set
-        colnames(set)[grep(paste(target,'_chg_12',sep=''),colnames(set))]='infl'
-        infl.col=grep('infl',colnames(set))
+        colnames(set)[grep(paste(target,'_chg_12',sep=''),colnames(set))]='target'
+        infl.col=grep('target',colnames(set))
         df.y=set[,infl.col,drop=F]
         set.woinfl=set[,-infl.col]# woinfl=without inflation
         
         for (i in 1:ncol(set.woinfl)){
-                df.x=cbind(df.y,set.woinfl[,i,drop=F])
+                 df.x=cbind(df.y,set.woinfl[,i,drop=F])
+#                 if (i==41){max.lag=9}# IPT horizon 12
                 if (i==1){forecast=bmafo(df.y,df.x,horizon,max.lag)}else{
                         forecast=rbind(forecast,bmafo(df.y,df.x,horizon,max.lag))
                         }
-                }   #end model loop
+#                 if (i==41){max.lag=9}# IPT horizon 12 
+                }   # end model loop
         forecast.all[[vint.num]]=forecast
         
         }#end vintage loop
 
-# test=apply(set.woinfl,2,function(x) bmafo(df.y,x,hor=12,max.lag=12))
-# test=bmafo(df.y,df.x,hor=12,max.lag=12)
+
 
 ```
