@@ -45,8 +45,14 @@ useful.nvint=rowSums(useful)
 use.ful.models=colSums(useful)
 plot(use.ful.models,main='number of useful models\n each vintages',xlab='vintage',ylab='number of useful models',type='l')
 hist(useful.nvint,main='histogram of how many\n vintages each model is useful',ylab='number of models',xlab='number of vintages when useful')
+
+# dropping useless models
+forecast.all.s=forecast.all
+forecast.all=forecast.all.s
+forecast.all=sapply(forecast.all,function(x) x[useful.ind,])
+
 ```
 
-The models droped are `r text` for containing zeros at a certain point in time.
+The models dropped are `r text` for containing zeros at a certain point in time.
 Furthermore, `r Nvint-sum(useful.ind)` models had to be dropped, as none of the lags of the exogenous explanatory variable has been significant at one point in time. 
 
