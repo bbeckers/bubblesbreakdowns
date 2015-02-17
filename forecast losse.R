@@ -273,4 +273,4 @@ for (i in 1:model.n){
 surprise.ci=sapply(surprise.wald,function(x) x$SLfitCI)
 
 
-
+write.csv(surprise.ci,paste(DirCode,'/results/surprise.ci','_',target,'_',horizon,'.csv',sep=''))

@@ -117,6 +117,7 @@ push.down=function(variable,set){
                 return(aux2)
                 }
 forecast.all=vector('list',length(sets))
+forecast.ar=matrix(NA,nrow=length(sets),1)
 
 for (vint.num in 1:length(sets)){
         set.rt=sets[[vint.num]]
@@ -163,6 +164,7 @@ for (vint.num in 1:length(sets)){
 
         for (i in 1:ncol(set.woinfl)){
                  df.x=cbind(df.y,set.woinfl[,i,drop=F])
+                 forecast.ar[i,1]=bmafo(df.y,df.y,horizon,max.lag)
                 if (i==41){max.lag=9}# IPT horizon 12
                 if (i==1){forecast=bmafo(df.y,df.x,horizon,max.lag)}else{
                         forecast=rbind(forecast,bmafo(df.y,df.x,horizon,max.lag))
