@@ -245,8 +245,8 @@ sigma2 = surprise.lambda*SLL
 
 # regression of SL on themselves
 pstar=3
-source(paste(DirCode,'/olsself.R',sep=''))
-surprise.res=apply(surpriseloss,2,olsself,pstar)
+source(paste(DirCode,'/olsself_bma.R',sep=''))
+surprise.res=apply(surpriseloss,2,olsself_bma,pstar)
 
 surprise.coef=sapply(surprise.res,function(x) x$b)
 surprise.regressors=sapply(surprise.res,function(x) x$Z)
