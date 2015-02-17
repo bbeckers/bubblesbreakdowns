@@ -11,7 +11,7 @@ bmafo <-function(df.y,df.x,horizon=1,max.lag=12){
 #         for testing:
 #         df.x=data.frame(rnorm(101))
 #         df.y=lag.exact(df.x,3) 
-#         df.y[is.na(df.y),1]=rnorm(sum(is.na(df.y)))
+#         df.y[is.na(df.y)==F,1]=df.y[is.na(df.y)==F,1]+rnorm(sum(is.na(df.y)==F))/10
 
         lag.exact<-function(df.x,lag.length){
                 # Returns a dataframe of the lags of df.x with lag.length
@@ -55,7 +55,7 @@ bmafo <-function(df.y,df.x,horizon=1,max.lag=12){
         nobs=sum(xy.complete)
         df.x.lag=as.matrix(df.x.lag[xy.complete,])
         y=df.y[xy.complete,]
-        y=as.vector(y)
+
         # getting optimal model using bma
         bma.res=bicreg(df.x.lag,y)
         # fitted values of best model
