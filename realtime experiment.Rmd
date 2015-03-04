@@ -17,11 +17,11 @@ source(paste(DirCode,'/bmafo.R',sep=''))
 library("BMA")
 
 # setting some values
-horizon=12 # inflation is published with on month lag, but in the following, the variables
+horizon=13 # inflation is published with on month lag, but in the following, the variables
 # are only lagged.
 target='IPT' # core inflation
 max.lag=12 # maximum lag length to be considered 
-max.obs=-1 # maximum number of past observations to be considered (rolling estimation);
+max.obs=120 # maximum number of past observations to be considered (rolling estimation);
 # setting negative window turns that of (recursive estimation)
 # rolling window size will be: max.obs-max.lag-horizon, as lags need to be considered for
 # estimation. 
@@ -117,7 +117,7 @@ push.down=function(variable,set){
                 return(aux2)
                 }
 forecast.all=vector('list',length(sets))
-forecast.ar=matrix(NA,nrow=length(sets),1)
+forecast.ar=matrix(NA,nrow=length(sets),ncol=7)
 
 for (vint.num in 1:length(sets)){
         set.rt=sets[[vint.num]]
@@ -164,16 +164,20 @@ for (vint.num in 1:length(sets)){
 
         for (i in 1:ncol(set.woinfl)){
                  df.x=cbind(df.y,set.woinfl[,i,drop=F])
-                 forecast.ar[i,1]=bmafo(df.y,df.y,horizon,max.lag)
-                if (i==41){max.lag=9}# IPT horizon 12
+                 ar.res=bmafo(df.y,df.y,horizon,max.lag)
+                 forecast.ar[i,]=as.matrix(ar.res,nrow=1)
+                if (i==41){max.lag.s=max.lag
+                        max.lag=9}# IPT horizon 12
                 if (i==1){forecast=bmafo(df.y,df.x,horizon,max.lag)}else{
                         forecast=rbind(forecast,bmafo(df.y,df.x,horizon,max.lag))
                         }
-                if (i==41){max.lag=9}# IPT horizon 12 
+                if (i==41){max.lag=max.lag.s}# IPT horizon 12 
                 }   # end model loop
         forecast.all[[vint.num]]=forecast
 
         }#end vintage loop
+save.image(paste('H:/git/bubblesbreakdowns/Results/',target,' hor ',horizon,' recursive.RData',sep=''))
+#DirCode='h:/Git/bubblesbreakdowns'
 ```
 
 
