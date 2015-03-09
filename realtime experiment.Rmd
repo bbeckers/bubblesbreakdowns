@@ -106,20 +106,10 @@ For each variable in the set, 1st and 2nd differences, month-on-month and year-o
 ```{r}
 # loop -----------------------------------------------------------
 
-push.down=function(variable,set){
-        # pushes all variables to the forecast origin 
-                aux=set[,variable]
-                naux=length(aux)
-                values=aux[is.na(aux)==F]
-                nvalues=length(values)
-                aux2=rep(NA,naux)
-                aux2[(naux-nvalues+1):naux]=values
-                return(aux2)
-                }
-forecast.all=vector('list',length(sets))
-forecast.ar=matrix(NA,nrow=length(sets),ncol=7)
 
-for (vint.num in 1:length(sets)){
+
+
+for (vint.num in 1:length(sets)){#vint.num=1
         set.rt=sets[[vint.num]]
         set.last.date=vintage[
                 grep(paste(vintage$name[vint.num],'$',sep=''),vintage$name)
@@ -136,7 +126,13 @@ for (vint.num in 1:length(sets)){
         set.aux=set
         set.aux[is.na(set)]=1
         chg.ok=colSums(set.aux==0)==0
-
+        
+        # endogenous and endogenous regressor a la rossi 2008
+        y=set[,target,drop=F]
+        ylag=1200*log(y/lag.exact(y,1))
+        
+        yx=1200*as.integer(log(y[2:nrow(y)]/y[1:(length(y)-1)]))
+        
         # adding transformations
         set=cbind(set,diff(set,1,1)
                   ,diff(set,2,1)
@@ -150,7 +146,7 @@ for (vint.num in 1:length(sets)){
         # pushing down all variables        
         variables=colnames(set)
         dates=row.names(set)
-        for (variable in variables){
+        for (variable in variables){0
                 set[,variable]=push.down(variable,set)
         }
         set=data.frame(sapply(variables,push.down,set))
@@ -160,10 +156,10 @@ for (vint.num in 1:length(sets)){
         colnames(set)[grep(paste(target,'_chg_12',sep=''),colnames(set))]='target'
         infl.col=grep('target',colnames(set))
         df.y=set[,infl.col,drop=F]
-        set.woinfl=set[,-infl.col]# woinfl=without inflation
+        set.wotarget=set[,-infl.col]# wotarget=without inflation
 
-        for (i in 1:ncol(set.woinfl)){
-                 df.x=cbind(df.y,set.woinfl[,i,drop=F])
+        for (i in 1:ncol(set.wotarget)){
+                 df.x=cbind(df.y,set.wotarget[,i,drop=F])
                  ar.res=bmafo(df.y,df.y,horizon,max.lag)
                  forecast.ar[i,]=as.matrix(ar.res,nrow=1)
                 if (i==41){max.lag.s=max.lag
