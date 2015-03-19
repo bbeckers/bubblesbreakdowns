@@ -6,7 +6,7 @@ output: html_document
 ---
 
 ```{r}
-DirCode='C:/Users/Dirk/Documents/GitHub/bubblesbreakdowns'
+# DirCode='C:/Users/Dirk/Documents/GitHub/bubblesbreakdowns'
 DirCode='h:/Git/bubblesbreakdowns'
 
 # sourcing necassary scripts for estimation and forecast (for a description see "olsbmalag.Rmd")
@@ -14,12 +14,14 @@ source(paste(DirCode,'/lag.exact.R',sep=''))
 source(paste(DirCode,'/diff.R',sep=''))
 source(paste(DirCode,'/chg.R',sep=''))
 source(paste(DirCode,'/bmafo.R',sep=''))
+source(paste(DirCode,'/olsbic3.R',sep=''))
+source(paste(DirCode,'/olsbic1setgetting2.R',sep=''))
 library("BMA")
 
 # setting some values
-horizon=13 # inflation is published with on month lag, but in the following, the variables
+horizon=3 # inflation is published with on month lag, but in the following, the variables
 # are only lagged.
-target='IPT' # core inflation
+target='PCPIX' # core inflation
 max.lag=12 # maximum lag length to be considered 
 max.obs=120 # maximum number of past observations to be considered (rolling estimation);
 # setting negative window turns that of (recursive estimation)
@@ -47,6 +49,31 @@ overview.nr=overview.nr[-grep('.SA',overview.nr[,1]),]
 # dropping "MCOILWTICO" as it is too short (starting in 1986, first iteration here is 1983:7)
 df.unrevised=df.unrevised[,-grep("MCOILWTICO",colnames(df.unrevised))]
 overview.nr=overview.nr[-grep("MCOILWTICO",overview.nr[,1]),]
+
+
+# getting bubble indicators
+
+bubble.stock=read.csv(paste(DirCode,'/data/stockbubble.csv',sep=''),sep=';',row.names=1)
+row.names(bubble.stock)=gsub('M',':',row.names(bubble.stock))
+bubbletype=colnames(bubble.stock)
+colnames(bubble.stock)=paste(colnames(bubble.stock),'stock',sep=' ')
+
+bubble.housing=read.csv(paste(DirCode,'/data/Housingbubble.csv',sep=''),sep=';',row.names=1)
+row.names(bubble.housing)=gsub('M',':',row.names(bubble.housing))
+colnames(bubble.housing)=paste(colnames(bubble.housing),'house',sep=' ')
+
+
+df.bubble=data.frame(matrix(NA,ncol=ncol(bubble.housing)+ncol(bubble.stock),nrow=nrow(df.unrevised)))
+colnames(df.bubble)=c(colnames(bubble.housing),colnames(bubble.stock))
+row.names(df.bubble)=row.names(df.unrevised)
+df.bubble[row.names(bubble.stock),colnames(bubble.stock)]=bubble.stock
+df.bubble[row.names(bubble.housing),colnames(bubble.housing)]=bubble.housing
+
+# compound indicators
+cc=complete.cases(df.bubble)
+df.bubble=df.bubble[cc,]
+df.bubble[,bubbletype]=NA
+df.bubble[,bubbletype]=df.bubble[,colnames(bubble.housing)]+df.bubble[,colnames(bubble.stock)]
 
 # transforming rownames (dates) of unrevised data accordingly
 df.ur.rownames=row.names(df.unrevised)
@@ -106,10 +133,22 @@ For each variable in the set, 1st and 2nd differences, month-on-month and year-o
 ```{r}
 # loop -----------------------------------------------------------
 
+push.down=function(variable,set){
+        # pushes all variables to the forecast origin 
+        aux=set[,variable]
+        naux=length(aux)
+        values=aux[is.na(aux)==F]
+        nvalues=length(values)
+        aux2=rep(NA,naux)
+        aux2[(naux-nvalues+1):naux]=values
+        return(aux2)
+        }
+forecast.all=vector('list',length(sets))
 
+extract.ar=c('fc','horizon','nobs','msr','p1','names')
+extract=c('fc','horizon','nobs','msr','p1','p2','names')
 
-
-for (vint.num in 1:length(sets)){#vint.num=1
+for (vint.num in 1:length(sets)){# vint.num=1
         set.rt=sets[[vint.num]]
         set.last.date=vintage[
                 grep(paste(vintage$name[vint.num],'$',sep=''),vintage$name)
@@ -120,18 +159,24 @@ for (vint.num in 1:length(sets)){#vint.num=1
         set.rt=set.rt[1:set.lst.obs,]
         set.unrevised=df.unrevised[row.names(set.rt),]
         set=cbind(set.rt,set.unrevised)
-
+        
+        # Rossi and Sekhposyan (2008) targets
+        y.raw=set[,target,drop=F]
+        col.target=which(colnames(set)==target)
+        set=set[,-col.target]
+        rm(col.target)
+        y=1200/horizon*log(y.raw/lag.exact(y.raw,horizon))
+        yx=1200*log(y.raw/lag.exact(y.raw,1))
+        colnames(yx)=paste(target,'x',sep='')
+        #         if (target=='PCPIX'){# Rossi and Sekhposyan (2008) inflation target
+        #                 y=y-yx
+        #                 }
+        
         # filtering those variables that cannot be transformed to change rates
         # due to zeros.#### attention: this might lead to an unbalanced panel!
         set.aux=set
-        set.aux[is.na(set)]=1
-        chg.ok=colSums(set.aux==0)==0
-        
-        # endogenous and endogenous regressor a la rossi 2008
-        y=set[,target,drop=F]
-        ylag=1200*log(y/lag.exact(y,1))
-        
-        yx=1200*as.integer(log(y[2:nrow(y)]/y[1:(length(y)-1)]))
+        set.aux[is.na(set)]=1 # NAs to 1, they are no problem for computing chg-rates
+        chg.ok=colSums(set.aux<=0)==0
         
         # adding transformations
         set=cbind(set,diff(set,1,1)
@@ -139,41 +184,49 @@ for (vint.num in 1:length(sets)){#vint.num=1
                   ,chg(set[,chg.ok],1)
                   ,chg(set[,chg.ok],12)
                   )
-
+        
+        # adding bubble indicator
+        set=cbind(set,df.bubble[row.names(set),])
+        
         # window of max.obs month back
-        if (max.obs>0){set=set[(nrow(set)-max.obs+1):nrow(set),]}
-
+        if (max.obs>0){
+                y=y[(nrow(set)-max.obs+1):nrow(set),1,drop=F]
+                yx=yx[(nrow(set)-max.obs+1):nrow(set),1,drop=F]
+                set=set[(nrow(set)-max.obs+1):nrow(set),]
+                }
+        
         # pushing down all variables        
         variables=colnames(set)
         dates=row.names(set)
-        for (variable in variables){0
-                set[,variable]=push.down(variable,set)
-        }
+        
+        y[,1]=push.down(target,y)
+        yx[,1]=push.down(paste(target,'x',sep=''),yx)
+        
         set=data.frame(sapply(variables,push.down,set))
         row.names(set)=dates
-
-        # spliting inflation and rest of set
-        colnames(set)[grep(paste(target,'_chg_12',sep=''),colnames(set))]='target'
-        infl.col=grep('target',colnames(set))
-        df.y=set[,infl.col,drop=F]
-        set.wotarget=set[,-infl.col]# wotarget=without inflation
-
-        for (i in 1:ncol(set.wotarget)){
-                 df.x=cbind(df.y,set.wotarget[,i,drop=F])
-                 ar.res=bmafo(df.y,df.y,horizon,max.lag)
-                 forecast.ar[i,]=as.matrix(ar.res,nrow=1)
-                if (i==41){max.lag.s=max.lag
-                        max.lag=9}# IPT horizon 12
-                if (i==1){forecast=bmafo(df.y,df.x,horizon,max.lag)}else{
-                        forecast=rbind(forecast,bmafo(df.y,df.x,horizon,max.lag))
-                        }
-                if (i==41){max.lag=max.lag.s}# IPT horizon 12 
-                }   # end model loop
+        
+        forecast=data.frame(matrix(NA,nrow=ncol(set)+1,length(extract)))
+        colnames(forecast)=extract
+        row.names(forecast)=c('ar',colnames(set))
+        
+        forecast['ar',extract.ar]=unlist(
+                olsbic3(y,yx,horizon,max.lag)[extract]
+                )
+        p1=forecast['ar','p1']       
+        for (i in 1:ncol(set)){# i=1
+                xx=cbind(yx,set[,i,drop=F])
+                resu=unlist(
+                        olsbic1setgetting2(y,xx,horizon,max.lag,p1=p1)[extract]
+                        )
+                if (length(resu)>0){
+                     forecast[colnames(set)[i],extract]=resu   
+                }
+                
+                }# end model loop
         forecast.all[[vint.num]]=forecast
-
+        
         }#end vintage loop
-save.image(paste('H:/git/bubblesbreakdowns/Results/',target,' hor ',horizon,' recursive.RData',sep=''))
-#DirCode='h:/Git/bubblesbreakdowns'
+save(forecast.all,file=paste(DirCode,'/results/',target,'_h',horizon,'.RData',sep=''))
 ```
 
 
