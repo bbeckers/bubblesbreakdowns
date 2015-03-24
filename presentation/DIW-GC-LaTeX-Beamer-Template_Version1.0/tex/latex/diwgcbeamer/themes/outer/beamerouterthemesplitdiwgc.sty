@@ -1,0 +1,95 @@
+% Copyright 2007 by Till Tantau
+% Copyright 2012 by Martin Schwietzke
+%
+% This file may be distributed and/or modified
+%
+% 1. under the LaTeX Project Public License and/or
+% 2. under the GNU Public License.
+%
+% See the file doc/licenses/LICENSE for more details.
+
+
+\beamertemplatenavigationsymbolsempty
+\mode<presentation>
+
+\setbeamercolor{section in head/foot}{parent=palette quaternary}
+\setbeamercolor{subsection in head/foot}{parent=palette primary}
+
+\setbeamercolor{author in head/foot}{parent=section in head/foot}
+\setbeamercolor{title in head/foot}{parent=subsection in head/foot}
+
+
+
+\usesectionheadtemplate
+  {\hfill\insertsectionhead}
+  {\hfill\color{fg!50!bg}\insertsectionhead}
+
+                                % Head
+\ifbeamer@compress
+
+\defbeamertemplate*{footline}{splitdiwgc theme}
+{%
+  \leavevmode%
+  \begin{beamercolorbox}[wd=.5\paperwidth,ht=2.5ex,dp=1.125ex]{section in head/foot}%
+    \insertsectionnavigationhorizontal{.5\paperwidth}{\hskip0pt plus1filll}{}%
+  \end{beamercolorbox}%
+  \begin{beamercolorbox}[wd=.5\paperwidth,ht=2.5ex,dp=1.125ex]{subsection in head/foot}%
+    \insertsubsectionnavigationhorizontal{.5\paperwidth}{}{\hskip0pt plus1filll}%
+  \end{beamercolorbox}%
+}
+
+\else
+
+\defbeamertemplate*{footline}{splitdiwgc theme}
+{%
+  \leavevmode%
+  %\@tempdimb=2.4375ex%
+  %\ifnum\beamer@subsectionmax<\beamer@sectionmax%
+   % \multiply\@tempdimb by\beamer@sectionmax%
+  %\else%
+   % \multiply\@tempdimb by\beamer@subsectionmax%
+  %\fi%
+  %\ifdim\@tempdimb>0pt%
+  %  \advance\@tempdimb by 1.125ex%    %ht=\@tempdimb
+    \begin{beamercolorbox}[wd=.5\paperwidth,ht=15pt,right,sep=1.5ex]{section in head/foot}%
+      %\vbox to\@tempdimb{\vfil\insertsectionnavigation{.4\paperwidth}\vfil}%
+      \insertsection
+    \end{beamercolorbox}%				%ht=\@tempdimb
+    \begin{beamercolorbox}[wd=.3\paperwidth,ht=15pt,sep=1.5ex]{subsection in head/foot}%
+      %\vbox to\@tempdimb{\vfil\insertsubsectionnavigation{.4\paperwidth}\vfil}%
+      \insertsubsection
+    \end{beamercolorbox}%  
+   \begin{beamercolorbox}[wd=.23\paperwidth,ht=15pt,center,sep=1.5ex]{}{} 
+	\pgfimage[height=5.5pt]{DIW_GRADUATE-CENTER_4C_S}  %
+  \end{beamercolorbox}%
+  %\fi%
+}
+
+\fi
+
+
+%\defbeamertemplate*{footline}{splitdiwgc theme}
+%{%
+%  \leavevmode%
+%  \hbox{\begin{beamercolorbox}[wd=.5\paperwidth,ht=2.5ex,dp=1.125ex,leftskip=.3cm plus1fill,rightskip=.3cm]{author in head/foot}%
+%    \usebeamerfont{author in head/foot}\insertshortauthor
+%  \end{beamercolorbox}%
+%  \begin{beamercolorbox}[wd=.5\paperwidth,ht=2.5ex,dp=1.125ex,leftskip=.3cm,rightskip=.3cm plus1fil]{title in head/foot}%
+%    \usebeamerfont{title in head/foot}\insertshorttitle
+%  \end{beamercolorbox}}%
+%  \vskip0pt%
+%}
+
+
+\mode
+<all>
+
+
+    %\begin{beamercolorbox}[wd=.4\paperwidth,ht=15pt,center,sep=1.5ex]{}{} 
+	%\insertsection
+    %\end{beamercolorbox}
+    
+	%\begin{beamercolorbox}[wd=.4\paperwidth,ht=15pt,center,sep=1.5ex]{}{} 
+	%\insertsubsection
+    %\end{beamercolorbox}
+    

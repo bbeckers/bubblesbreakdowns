@@ -1,0 +1,89 @@
+% This file may be distributed and/or modified
+%
+% 1. under the LaTeX Project Public License and/or
+% 2. under the GNU Public License.
+%
+% See the file doc/licenses/LICENSE for more details.
+
+\beamertemplatenavigationsymbolsempty
+\mode<presentation>
+
+
+\setbeamercolor*{author in head/foot}{parent=palette tertiary}
+\setbeamercolor*{title in head/foot}{parent=palette secondary}
+\setbeamercolor*{date in head/foot}{parent=palette primary}
+
+\setbeamercolor*{section in head/foot}{parent=palette tertiary}
+\setbeamercolor*{subsection in head/foot}{parent=palette primary}
+
+
+
+\defbeamertemplate*{title page}{diwgc theme}[1][]
+{
+  
+  \begin{centering}
+    \begin{beamercolorbox}[right,ht=1cm]{} \pgfimage[height=0.45cm]{DIW_GRADUATE-CENTER_CO}%
+	
+	\end{beamercolorbox}%
+	
+	\vfill
+	
+    \begin{beamercolorbox}[rounded=true,shadow=true,ht=7cm,sep=8pt,left]{title} 
+	  \noindent
+	  \huge
+	  \inserttitle \newline
+	  %\newline
+	  \vfill
+	  \large
+	  \insertsubtitle
+	  
+	  \begin{beamercolorbox}[sep=-4pt,left,ht=0.5pt,wd=0.95\textwidth]{whiteSeparationLine}
+	  \end{beamercolorbox}
+	  
+	  \begin{beamercolorbox}[left,sep=8pt]{}%inner box
+	  \large
+	  \insertauthor \newline 
+	  \end{beamercolorbox}
+	  
+    \end{beamercolorbox}
+    
+	\end{centering}
+   
+  
+    \vfill
+ 
+	\begin{beamercolorbox}[]{}
+	\tiny \insertinstitute \hfill
+	\tiny \insertdate
+	\end{beamercolorbox}
+}
+
+
+ 
+\defbeamertemplate*{last page}{diwgc theme}[1][]
+{													
+	\begin{beamercolorbox}[rounded=true,shadow=true]{footlinecolor}%
+		\usebeamerfont{title}
+		\begin{beamercolorbox}[sep=5pt]{title}
+		\LastPageText
+		\end{beamercolorbox}
+		\begin{beamercolorbox}[sep=4pt,ht=0.5pt,wd=1.0\textwidth]{whiteSeparationLine}
+		\end{beamercolorbox}
+		\begin{beamercolorbox}[sep=5pt,left]{title}
+		\vskip0.2cm
+		\pgfimage[height=0.4cm]{GC-Logo-lastPage.pdf}%
+		\vskip0.6cm
+		\usebeamerfont{title page}
+		\small{DIW Berlin -- Deutsches Institut  \newline		
+		 f{\"u}r Wirtschaftsforschung e.V. \newline
+		 Mohrenstra{\ss}e 58, 10117 Berlin \newline
+		 www.diw.de}
+		\end{beamercolorbox}	
+	\end{beamercolorbox}  
+}
+
+
+
+
+\mode
+<all>

@@ -1,0 +1,171 @@
+% This file may be distributed and/or modified
+%
+% 1. under the LaTeX Project Public License and/or
+% 2. under the GNU Public License.
+%
+% See the file doc/licenses/LICENSE for more details.
+
+
+\mode<presentation>
+
+\usefonttheme{default}
+\usecolortheme{diwgc}
+\useinnertheme{diwgc}
+\useoutertheme{diwgc}
+
+
+\def\lastpage{\usebeamertemplate*{last page}}
+
+
+%\DeclareOptionBeamer{showfootline}[true]{\csname beamer@diwgc@showfootline#1\endcsname}
+%\ProcessOptionsBeamer
+
+
+\newif\ifbeamer@diwgc@showfootline
+\newif\ifbeamer@diwgc@showframenumbers
+\newif\ifbeamer@diwgc@showlogoonly
+\newif\ifbeamer@diwgc@showlogo
+
+
+%\DeclareOptionBeamer{showfootline}[true]{\csname beamer@diwgc@showfootline#1\endcsname}%{\def\beamer@diw@showfootline{#1}} 
+%\ExecuteOptionsBeamer{showfootline=true}   
+%\ProcessOptionsBeamer
+
+\DeclareOptionBeamer{showfootline}[false]{\csname beamer@diwgc@showfootline#1\endcsname}%{\def\beamer@diw@showfootline{#1}} 
+\ExecuteOptionsBeamer{showfootline=false}   
+%\ProcessOptionsBeamer
+\DeclareOptionBeamer{showframenumbers}[false]{\csname beamer@diwgc@showframenumbers#1\endcsname}%{\def\beamer@diw@showfootline{#1}} 
+\ExecuteOptionsBeamer{showframenumbers=false} 
+
+\DeclareOptionBeamer{showlogoonly}[false]{\csname beamer@diwgc@showlogoonly#1\endcsname}%{\def\beamer@diw@showfootline{#1}} 
+\ExecuteOptionsBeamer{showlogoonly=false} 
+
+\DeclareOptionBeamer{showlogo}[false]{\csname beamer@diwgc@showlogo#1\endcsname}%{\def\beamer@diw@showfootline{#1}} 
+\ExecuteOptionsBeamer{showlogo=false} 
+
+\ProcessOptionsBeamer
+
+
+
+
+\defbeamertemplate*{footline}{diwgc theme}[1]
+{
+
+\ifbeamer@diwgc@showlogoonly
+  \hbox{%
+  \begin{beamercolorbox}[wd=.25\paperwidth,ht=15pt,left,sep=1.5ex]{footlineletters}{} 
+ \end{beamercolorbox}%
+	\begin{beamercolorbox}[wd=.25\paperwidth,ht=15pt,right,sep=1.5ex]{footlineletters}{} 
+	\end{beamercolorbox}
+	
+  \begin{beamercolorbox}[wd=.25\paperwidth,ht=15pt,right,sep=1.5ex]{footlineletters}{} 
+	\end{beamercolorbox}
+	
+  \begin{beamercolorbox}[wd=.23\paperwidth,ht=15pt,right,sep=1.5ex]{}{} 
+	\pgfimage[height=5.5pt]{DIW_GRADUATE-CENTER_4C_S}  %
+  \end{beamercolorbox}%
+  \begin{beamercolorbox}[wd=.02\paperwidth,ht=15pt]{}{}
+ \end{beamercolorbox}
+ }%hbox 
+ \fi
+ 
+
+
+
+
+  \begin{beamercolorbox}[wd=1.0\paperwidth,ht=0.5pt]{footlinecolor}{}
+  \end{beamercolorbox}
+     %\leavevmode%
+\ifbeamer@diwgc@showfootline
+ \hbox{%
+  \begin{beamercolorbox}[wd=.33\paperwidth,ht=15pt,left,sep=1.5ex]{footlineletters}{} \insertshortauthor 
+ \end{beamercolorbox}%
+	\begin{beamercolorbox}[wd=.33\paperwidth,ht=15pt,center,sep=1.5ex]{footlineletters}{} \insertshorttitle
+	\end{beamercolorbox}
+  \begin{beamercolorbox}[wd=.32\paperwidth,ht=15pt,right,sep=1.5ex]{}{} 
+	\pgfimage[height=5.5pt]{DIW_GRADUATE-CENTER_4C_S}  %
+  \end{beamercolorbox}%
+  \begin{beamercolorbox}[wd=.02\paperwidth,ht=15pt]{}{}
+ \end{beamercolorbox}
+ }%hbox
+ %\else
+\fi
+ 
+\ifbeamer@diwgc@showframenumbers
+\hbox{%
+  \begin{beamercolorbox}[wd=.25\paperwidth,ht=15pt,left,sep=1.5ex]{footlineletters}{} \insertshortauthor 
+ \end{beamercolorbox}%
+	\begin{beamercolorbox}[wd=.25\paperwidth,ht=15pt,right,sep=1.5ex]{footlineletters}{} \insertshorttitle
+	\end{beamercolorbox}
+	
+  \begin{beamercolorbox}[wd=.25\paperwidth,ht=15pt,right,sep=1.5ex]{footlineletters}{} \insertframenumber\,/\,\inserttotalframenumber %
+	\end{beamercolorbox}
+	
+  \begin{beamercolorbox}[wd=.23\paperwidth,ht=15pt,right,sep=1.5ex]{}{} 
+	\pgfimage[height=5.5pt]{DIW_GRADUATE-CENTER_4C_S}  %
+  \end{beamercolorbox}%
+  \begin{beamercolorbox}[wd=.02\paperwidth,ht=15pt]{}{}
+ \end{beamercolorbox}
+ }%hbox 
+ \fi
+  
+  
+ \ifbeamer@diwgc@showlogo
+  \hbox{%
+  \begin{beamercolorbox}[wd=.25\paperwidth,ht=15pt,left,sep=1.5ex]{footlineletters}{} 
+ \end{beamercolorbox}%
+	\begin{beamercolorbox}[wd=.25\paperwidth,ht=15pt,right,sep=1.5ex]{footlineletters}{} 
+	\end{beamercolorbox}
+	
+  \begin{beamercolorbox}[wd=.25\paperwidth,ht=15pt,right,sep=1.5ex]{footlineletters}{} 
+	\end{beamercolorbox}
+	
+  \begin{beamercolorbox}[wd=.23\paperwidth,ht=15pt,right,sep=1.5ex]{}{} 
+	\pgfimage[height=5.5pt]{DIW_GRADUATE-CENTER_4C_S}  %
+  \end{beamercolorbox}%
+  \begin{beamercolorbox}[wd=.02\paperwidth,ht=15pt]{}{}
+ \end{beamercolorbox}
+ }%hbox 
+ \fi 
+  
+  
+ 
+}
+%\else
+
+
+
+
+
+
+
+%\DeclareOptionBeamer{showpagenumbers}[true]{\csname beamer@diwgc@showpagenumbers#1\endcsname}%{\def\beamer@diw@showfootline{#1}} 
+%\ExecuteOptionsBeamer{showpagenumbers=true}   
+%\ProcessOptionsBeamer
+
+%\ifbeamer@diwgc@showpagenumbers
+%\defbeamertemplate*{footline}{diwgc theme}[1]
+%{
+%  \begin{beamercolorbox}[wd=1.0\paperwidth,ht=0.5pt]{footlinecolor}{}
+%  \end{beamercolorbox}
+ %\leavevmode%
+ 
+%}
+%\fi
+
+%\newif\ifbeamer\beamertrue\beamerfalse
+%\ifbeamer
+%\documentclass[20pt,Screen4to3]{foils}
+%\else
+%\documentclass[12pt,a4paper,twoside]{scrreprt}
+%\fi
+
+
+
+
+
+
+
+
+\mode
+<all>
