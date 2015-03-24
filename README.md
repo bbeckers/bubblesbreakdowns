@@ -14,3 +14,11 @@ There are ?? sets saved as sets. Produces "sets.RData", "overview.csv" (containi
 - the unrevised data are lagged according to their publication lags given in NonrevData overview
 - "bmafo.R" is used to identify the best lag structure of an autoregressive model including the target (core inflation rate) and one additional regressors. bmafo.R is described in "olsbmalag.Rmd". Then a 13 month horizon forecast is made and stored in "forecast.all"
 
+## computing confidence bands of the surprise losses
+"forecast losse.R" 
+This file first gets all the data used in the experiment, drops those models that are not useful,
+that is, that could not be computed for the whole horizon (zeros prevent change rate computation, insample
+fit is not appropriate at some stage), and collects the in- and out-of-sample error to construct the SL.
+Finally, the SL-test is conducted with the endogeneous as explanatory variable.
+ATTENTION: Target variable and horizon need to be set.
+setting some values
