@@ -1,0 +1,57 @@
+BIC RESULTS
+
+h =
+
+     1
+
+{Operation terminated by user during <a href="matlab:helpUtils.errorDocCallback('gmmbeta', 'H:\Projects\Forecast Instability around Bubbles\Code\Rossi\maincodes\gmmbeta.m', 11)" style="font-weight:bold">gmmbeta</a> (<a href="matlab: opentoline('H:\Projects\Forecast Instability around Bubbles\Code\Rossi\maincodes\gmmbeta.m',11,0)">line 11</a>)
+
+
+In <a href="matlab:helpUtils.errorDocCallback('tables2and3BICFinal', 'H:\Projects\Forecast Instability around Bubbles\Code\Rossi\empirical\tables2and3BICFinal.m', 90)" style="font-weight:bold">tables2and3BICFinal</a> (<a href="matlab: opentoline('H:\Projects\Forecast Instability around Bubbles\Code\Rossi\empirical\tables2and3BICFinal.m',90,0)">line 90</a>)
+            b = gmmbeta(ffrhere,regressors,instruments,1);
+} 
+clear
+clc
+tables2and3BICFinal
+[Warning: File not found or permission denied] 
+[> In <a href="matlab: opentoline('H:\Projects\Forecast Instability around Bubbles\Code\Rossi\empirical\tables2and3BICFinal.m',5,1)">tables2and3BICFinal at 5</a>] 
+BIC RESULTS
+
+h =
+
+     1
+
+Unconditional test p-value = 0.021896
+Conditional test p-value (constant only) = 0.095339
+Conditional test p-value (constant and lagged loss) = 0.00062601
+Using the monetary policy coefficients
+beta  
+
+coef =
+
+    0.5292   -2.1865
+
+gamma 
+
+coef =
+
+   -4.2924    1.6542
+
+rho   
+
+coef =
+
+   -7.4569    6.2722
+
+One-step ahead forecasts beginning at 1979  1
+
+table =
+
+    1.0000  241.0000    0.0219    0.0953    0.0006
+
+
+Table3new =
+
+   -2.1865    1.6542    6.2722    7.2860   -0.8557
+    0.1850    0.0457    0.9375    0.0633    0.0713
+
