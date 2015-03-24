@@ -1,0 +1,87 @@
+% This file was created with JabRef 2.10.
+% Encoding: Cp1252
+
+
+@Article{bettendorf13,
+  Title                    = {{Are there bubbles in the Sterling-dollar exchange rate? New evidence from sequential ADF tests}},
+  Author                   = {Bettendorf, Timo and Chen, Wenjuan},
+  Journal                  = {Economics Letters},
+  Year                     = {2013},
+  Number                   = {2},
+  Pages                    = {350--353},
+  Volume                   = {120},
+
+  Publisher                = {Elsevier}
+}
+
+@Article{gr10,
+  Title                    = {{Forecast comparisons in unstable environments}},
+  Author                   = {Raffaella Giacomini and Barbara Rossi},
+  Journal                  = {Journal of Applied Econometrics},
+  Year                     = {2010},
+  Number                   = {4},
+  Pages                    = {595-620},
+  Volume                   = {25},
+
+  Abstract                 = { We propose new methods for comparing the out-of-sample forecasting performance of two competing models in the presence of possible instabilities. The main idea is to develop a measure of the relative local forecasting performance for the two models, and to investigate its stability over time by means of statistical tests. We propose two tests (the Fluctuation test and the One-Time Reversal test) that analyze the evolution of the models' relative performance over historical samples. In contrast to previous approaches to forecast comparison, which are based on measures of global performance, we focus on the entire time path of the models' relative performance, which may contain useful information that is lost when looking for the model that forecasts best on average. We apply our tests to the analysis of the time variation in the out-of-sample forecasting performance of monetary models of exchange rate determination relative to the random walk. Copyright © 2010 John Wiley \& Sons, Ltd.},
+  Url                      = {http://ideas.repec.org/a/jae/japmet/v25y2010i4p595-620.html}
+}
+
+@Article{gr09,
+  Title                    = {{Detecting and Predicting Forecast Breakdowns}},
+  Author                   = {Raffaella Giacomini and Barbara Rossi},
+  Journal                  = {Review of Economic Studies},
+  Year                     = {2009},
+  Number                   = {2},
+  Pages                    = {669-705},
+  Volume                   = {76},
+
+  Abstract                 = { We propose a theoretical framework for assessing whether a forecast model estimated over one period can provide good forecasts over a subsequent period. We formalize this idea by defining a forecast breakdown as a situation in which the out-of-sample performance of the model, judged by some loss function, is significantly worse than its in-sample performance. Our framework, which is valid under general conditions, can be used not only to detect past forecast breakdowns but also to predict future ones. We show that main causes of forecast breakdowns are instabilities in the data-generating process and relate the properties of our forecast breakdown test to those of structural break tests. The empirical application finds evidence of a forecast breakdown in the Phillips' curve forecasts of U.S. inflation, and links it to inflation volatility and to changes in the monetary policy reaction function of the Fed. Copyright , Wiley-Blackwell.},
+  Url                      = {http://ideas.repec.org/a/oup/restud/v76y2009i2p669-705.html}
+}
+
+@Article{hansen11,
+  Title                    = {{The Model Confidence Set}},
+  Author                   = {Hansen, Peter R. and Lunde, Asger and Nason, James M.},
+  Journal                  = {Econometrica},
+  Year                     = {2011},
+  Number                   = {2},
+  Pages                    = {453--497},
+  Volume                   = {79},
+
+  Doi                      = {10.3982/ECTA5771},
+  ISSN                     = {1468-0262},
+  Keywords                 = {Model confidence set, model selection, forecasting, multiple comparisons},
+  Publisher                = {Blackwell Publishing Ltd},
+  Url                      = {http://dx.doi.org/10.3982/ECTA5771}
+}
+
+@Article{Rossi10,
+  Title                    = {{Have economic models' forecasting performance for \{US\} output growth and inflation changed over time, and when?}},
+  Author                   = {Barbara Rossi and Tatevik Sekhposyan},
+  Journal                  = {International Journal of Forecasting},
+  Year                     = {2010},
+  Number                   = {4},
+  Pages                    = {808 - 835},
+  Volume                   = {26},
+
+  Abstract                 = {We evaluate various economic models’ relative performance in forecasting future \{US\} output growth and inflation on a monthly basis. Our approach takes into account the possibility that the models’ relative performance can vary over time. We show that the models’ relative performance have, in fact, changed dramatically over time, for both revised and real-time data, and investigate possible factors that might explain such changes. In addition, this paper establishes two empirical stylized facts. Specifically, most predictors for output growth lost their predictive ability in the mid-1970s, and became essentially useless over the last two decades. When forecasting inflation, on the other hand, fewer predictors are significant, and their predictive ability worsened significantly around the time of the Great Moderation. },
+  Doi                      = {http://dx.doi.org/10.1016/j.ijforecast.2009.08.004},
+  ISSN                     = {0169-2070},
+  Keywords                 = {Output growth forecasts},
+  Url                      = {http://www.sciencedirect.com/science/article/pii/S0169207009001332}
+}
+
+@Article{sw03,
+  Title                    = {{Forecasting Output and Inflation: The Role of Asset Prices}},
+  Author                   = {Stock, James H. and W.Watson, Mark},
+  Journal                  = {Journal of Economic Literature},
+  Year                     = {2003},
+  Number                   = {3},
+  Pages                    = {788-829},
+  Volume                   = {41},
+
+  Doi                      = {10.1257/002205103322436197},
+  Url                      = {http://www.aeaweb.org/articles.php?doi=10.1257/002205103322436197}
+}
+
