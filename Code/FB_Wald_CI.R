@@ -56,8 +56,11 @@ if (bw>0){
     SzLzL = SzLzL + (1-j/(bw+1))*(GAMMAzLzL+t(GAMMAzLzL))
   }
 }
-
-A = rbind(cbind(1, -colMeans(Z[,2:k])%*%solve(Szz)),cbind(matrix(0,ktilde,1), solve(Szz)))
+if (k>2){
+  A = rbind(cbind(1, -colMeans(Z[,2:k])%*%solve(Szz)),cbind(matrix(0,ktilde,1), solve(Szz)))
+} else {
+  A = rbind(cbind(1, -mean(Z[,2])%*%solve(Szz)),cbind(matrix(0,ktilde,1), solve(Szz)))
+}
 C = rbind(cbind(sigma2, LAMBDA*t(SzLL)),cbind(LAMBDA*SzLL, SzLzL))
 
 # Covariance matrix for Wald Test
